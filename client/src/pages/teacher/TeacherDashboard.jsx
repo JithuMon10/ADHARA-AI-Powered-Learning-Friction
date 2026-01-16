@@ -1,13 +1,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import ReactMarkdown from 'react-markdown'
 import './TeacherDashboard.css'
 
 /**
  * Teacher Dashboard - Enhanced with auto-analysis and early signs detection
  */
 
-const OLLAMA_URL = 'http://localhost:11434'
-const MODEL = 'qwen2.5-coder:7b-instruct-q4_K_M'
+const OLLAMA_URL = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434'
+const MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:7b'
 
 function TeacherDashboard() {
     const navigate = useNavigate()
@@ -332,12 +333,19 @@ Remember: This is for early detection only. Always recommend professional evalua
                                 </button>
                             </div>
                             <div className="ai-content">
+<<<<<<< HEAD
                                 {isAnalyzing ? (
                                     <div className="loading-analysis">
                                         <span className="spinner">⏳</span> Analyzing patterns...
                                     </div>
                                 ) : aiAnalysis ? (
                                     <pre className="ai-output">{aiAnalysis}</pre>
+=======
+                                {aiAnalysis ? (
+                                    <div className="ai-output">
+                                        <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
+                                    </div>
+>>>>>>> 0675d2fc9052ec3cb636be7d8c3766a8ff7eb8db
                                 ) : (
                                     <p className="ai-placeholder">
                                         {ollamaConnected ? 'Analysis will appear automatically...' : 'Start Ollama: OLLAMA_ORIGINS="*" ollama serve'}

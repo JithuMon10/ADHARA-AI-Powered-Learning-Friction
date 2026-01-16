@@ -228,11 +228,128 @@
 
 .ai-output {
     margin: 0;
-    white-space: pre-wrap;
     font-family: inherit;
     font-size: 0.95rem;
-    line-height: 1.6;
+    line-height: 1.7;
     color: #333;
+}
+
+/* Markdown Headings */
+.ai-output h1,
+.ai-output h2,
+.ai-output h3,
+.ai-output h4 {
+    color: #333;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    font-weight: 700;
+}
+
+.ai-output h1:first-child,
+.ai-output h2:first-child,
+.ai-output h3:first-child {
+    margin-top: 0;
+}
+
+.ai-output h2 {
+    font-size: 1.2rem;
+    color: #667eea;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 8px;
+}
+
+.ai-output h3 {
+    font-size: 1.05rem;
+    color: #555;
+}
+
+/* Markdown Paragraphs */
+.ai-output p {
+    margin: 0.8em 0;
+}
+
+.ai-output strong {
+    color: #333;
+    font-weight: 700;
+}
+
+/* Friction Level Badges in Text */
+.ai-output p strong:first-child {
+    display: inline-block;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 6px;
+    margin-right: 8px;
+    font-size: 0.85rem;
+}
+
+/* Markdown Lists */
+.ai-output ul,
+.ai-output ol {
+    margin: 0.8em 0;
+    padding-left: 1.5em;
+}
+
+.ai-output li {
+    margin: 0.5em 0;
+    padding-left: 8px;
+}
+
+.ai-output ul li {
+    list-style-type: none;
+    position: relative;
+}
+
+.ai-output ul li::before {
+    content: "▸";
+    position: absolute;
+    left: -1.2em;
+    color: #667eea;
+    font-weight: bold;
+}
+
+.ai-output ol li {
+    list-style-type: decimal;
+}
+
+/* Numbered items */
+.ai-output ol li strong:first-child {
+    color: #667eea;
+}
+
+/* Code/Emphasis */
+.ai-output code {
+    background: #f0f4ff;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    color: #667eea;
+}
+
+.ai-output em {
+    color: #666;
+    font-style: italic;
+}
+
+/* Horizontal Rules */
+.ai-output hr {
+    border: none;
+    border-top: 2px solid #e0e0e0;
+    margin: 1.5em 0;
+}
+
+/* Blockquotes for recommendations */
+.ai-output blockquote {
+    border-left: 4px solid #667eea;
+    margin: 1em 0;
+    padding: 12px 16px;
+    background: #f0f4ff;
+    border-radius: 0 8px 8px 0;
+}
+
+.ai-output blockquote p {
+    margin: 0;
 }
 
 .ai-placeholder {

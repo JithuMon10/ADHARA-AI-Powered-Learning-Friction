@@ -8,8 +8,8 @@
 // Read the system prompt from the markdown file
 import systemPromptMd from '../../data/llm_system_prompt.md?raw'
 
-const OLLAMA_URL = 'http://localhost:11434'
-const DEFAULT_MODEL = 'qwen2.5-coder:7b'
+const OLLAMA_URL = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434'
+const DEFAULT_MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:7b'
 
 /**
  * Extract the core system prompt from the markdown file
