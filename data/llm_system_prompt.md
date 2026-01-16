@@ -50,6 +50,25 @@ You have access to baseline data for these age groups:
 1. **Reading Friction** — Indicators during text-based tasks (hesitation, corrections, duration)
 2. **Attention Friction** — Focus and engagement indicators (idle motion, gaze stability)
 3. **Memory Friction** — Consistency and recall indicators (retries, speed variance)
+4. **Speech Friction** — Verbal communication patterns (speech rate, fillers, stammers, pauses)
+
+---
+
+## Speech Baseline Reference
+
+| Age Group | Speech Rate (WPM) | Pause (ms) | Fillers | Stammers | Silence Ratio |
+|-----------|-------------------|------------|---------|----------|---------------|
+| 6-8       | 100               | 800        | 5       | 2        | 0.20          |
+| 9-11      | 120               | 500        | 3       | 1        | 0.15          |
+| 12-14     | 140               | 400        | 2       | 1        | 0.12          |
+| 15+       | 150               | 300        | 1       | 0        | 0.10          |
+
+### Speech Metrics Explained:
+- **Speech Rate (WPM)**: Words spoken per minute
+- **Pause Duration**: Average gap between speech segments
+- **Filler Words**: Count of "um", "uh", "like", "you know"
+- **Stammer Count**: Repeated syllables or words
+- **Silence Ratio**: Percentage of time silent during task
 
 ---
 

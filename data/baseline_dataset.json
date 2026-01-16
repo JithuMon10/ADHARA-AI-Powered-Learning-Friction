@@ -31,6 +31,13 @@
                 "avgTaskDurationSec": 180,
                 "avgRetries": 2,
                 "avgIdlePeriods": 4
+            },
+            "speech": {
+                "avgSpeechRateWPM": 100,
+                "avgPauseDurationMs": 800,
+                "avgFillerWords": 5,
+                "avgStammerCount": 2,
+                "avgSilenceRatio": 0.20
             }
         },
         "9-11": {
@@ -58,6 +65,13 @@
                 "avgTaskDurationSec": 150,
                 "avgRetries": 1.5,
                 "avgIdlePeriods": 3
+            },
+            "speech": {
+                "avgSpeechRateWPM": 120,
+                "avgPauseDurationMs": 500,
+                "avgFillerWords": 3,
+                "avgStammerCount": 1,
+                "avgSilenceRatio": 0.15
             }
         },
         "12-14": {
@@ -84,6 +98,13 @@
                 "avgTaskDurationSec": 120,
                 "avgRetries": 1,
                 "avgIdlePeriods": 2
+            },
+            "speech": {
+                "avgSpeechRateWPM": 140,
+                "avgPauseDurationMs": 400,
+                "avgFillerWords": 2,
+                "avgStammerCount": 1,
+                "avgSilenceRatio": 0.12
             }
         },
         "15+": {
@@ -110,6 +131,13 @@
                 "avgTaskDurationSec": 90,
                 "avgRetries": 0.5,
                 "avgIdlePeriods": 1
+            },
+            "speech": {
+                "avgSpeechRateWPM": 150,
+                "avgPauseDurationMs": 300,
+                "avgFillerWords": 1,
+                "avgStammerCount": 0,
+                "avgSilenceRatio": 0.10
             }
         }
     },
@@ -211,7 +239,19 @@
                 "speedVariance",
                 "correctionCount"
             ],
-            "weight": 0.30
+            "weight": 0.25
+        },
+        "speech": {
+            "name": "Speech Friction",
+            "description": "Indicators related to verbal communication patterns",
+            "key_metrics": [
+                "speechRateWPM",
+                "pauseDuration",
+                "fillerWords",
+                "stammerCount",
+                "silenceRatio"
+            ],
+            "weight": 0.25
         }
     },
     "reference_scenarios": [

@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ADHARA — Speech Analyzer v1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            min-height: 100vh;
+            color: #f1f5f9;
+            padding: 16px;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            background: linear-gradient(90deg, #10b981, #06b6d4, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 16px;
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Waveform */
+        .waveform-container {
+            position: relative;
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 200px;
+        }
+
+        #waveformCanvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .waveform-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            right: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-badge {
+            background: rgba(0, 0, 0, 0.75);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+
+        .status-dot.recording {
+            background: #ef4444;
+            animation: pulse 1s infinite;
+        }
+
+        .status-dot.ready {
+            background: #10b981;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .btn-stop {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+        }
+
+        .btn-reset {
+            background: rgba(71, 85, 105, 0.6);
+            color: #e2e8f0;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        /* Transcript */
+        .transcript-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 120px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        .transcript-box .interim {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .transcript-box .filler {
+            background: rgba(245, 158, 11, 0.3);
+            padding: 0 4px;
+            border-radius: 3px;
+            color: #fbbf24;
+        }
+
+        .transcript-box .stammer {
+            background: rgba(239, 68, 68, 0.3);
+            padding: 0 4px;
+            border-radius: 3px;
+            color: #f87171;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .metric {
+            background: rgba(30, 41, 59, 0.8);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            font-family: monospace;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .metric-value.low { color: #10b981; }
+        .metric-value.medium { color: #f59e0b; }
+        .metric-value.high { color: #ef4444; }
+
+        /* Friction Display */
+        .friction-display {
+            text-align: center;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .friction-display.low {
+            background: rgba(16, 185, 129, 0.2);
+            border: 2px solid #10b981;
+        }
+
+        .friction-display.medium {
+            background: rgba(245, 158, 11, 0.2);
+            border: 2px solid #f59e0b;
+        }
+
+        .friction-display.high {
+            background: rgba(239, 68, 68, 0.2);
+            border: 2px solid #ef4444;
+        }
+
+        .friction-level {
+            font-size: 1.8rem;
+            font-weight: 800;
+        }
+
+        .friction-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+
+        /* AI Panel */
+        .ai-panel {
+            border: 2px solid #8b5cf6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(236, 72, 153, 0.05));
+        }
+
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.7rem;
+            color: #94a3b8;
+        }
+
+        .ai-summary {
+            background: rgba(0, 0, 0, 0.35);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 100px;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        /* Volume Meter */
+        .volume-meter {
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+            transition: width 0.1s;
+            border-radius: 4px;
+        }
+
+        /* Age Select */
+        .age-select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        /* Disclaimer */
+        .disclaimer {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #fbbf24;
+        }
+
+        /* Detection Log */
+        .detection-log {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .detection-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 8px;
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 0.75rem;
+        }
+
+        .detection-item.filler {
+            border-left: 3px solid #f59e0b;
+        }
+
+        .detection-item.stammer {
+            border-left: 3px solid #ef4444;
+        }
+
+        .detection-item.pause {
+            border-left: 3px solid #8b5cf6;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🎤 ADHARA Speech Analyzer v1</h1>
+            <p class="subtitle">Real-time speech pattern analysis for learning friction detection</p>
+        </header>
+
+        <div class="main-grid">
+            <!-- Left: Audio Capture -->
+            <div>
+                <div class="card">
+                    <div class="card-title">🎙️ Audio Capture</div>
+                    <div class="waveform-container">
+                        <canvas id="waveformCanvas"></canvas>
+                        <div class="waveform-overlay">
+                            <div class="status-badge">
+                                <span class="status-dot" id="statusDot"></span>
+                                <span id="statusText">Ready</span>
+                            </div>
+                            <div class="status-badge" id="durationDisplay">00:00</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 12px;">
+                        <div class="card-title">🔊 Volume Level</div>
+                        <div class="volume-meter">
+                            <div class="volume-fill" id="volumeFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <button class="btn btn-start" id="startBtn">🎤 START</button>
+                        <button class="btn btn-stop" id="stopBtn" disabled>⏹ STOP</button>
+                        <button class="btn btn-reset" id="resetBtn">↺ RESET</button>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 12px;">
+                    <div class="card-title">📝 Live Transcript</div>
+                    <div class="transcript-box" id="transcript">
+                        Click START and begin speaking. Your speech will be transcribed here...
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    ⚠️ <strong>Demo Only:</strong> Speech analysis uses browser APIs and may vary by browser/device.
+                    Not for assessment purposes. All data is processed locally.
+                </div>
+            </div>
+
+            <!-- Right: Analysis -->
+            <div>
+                <!-- Age Selection -->
+                <div class="card">
+                    <div class="card-title">👤 Learner Profile</div>
+                    <select class="age-select" id="ageSelect">
+                        <option value="6-8">Age 6-8 (Early Elementary)</option>
+                        <option value="9-11" selected>Age 9-11 (Upper Elementary)</option>
+                        <option value="12-14">Age 12-14 (Middle School)</option>
+                        <option value="15+">Age 15+ (High School+)</option>
+                    </select>
+                </div>
+
+                <!-- Friction Level -->
+                <div class="card" style="margin-top: 12px;">
+                    <div class="friction-display low" id="frictionDisplay">
+                        <div class="friction-level" id="frictionLevel">READY</div>
+                        <div class="friction-label">Speech Friction Level</div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric">
+                            <div class="metric-value low" id="speechRate">0</div>
+                            <div class="metric-label">WORDS/MIN</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value low" id="fillerCount">0</div>
+                            <div class="metric-label">FILLERS</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value low" id="stammerCount">0</div>
+                            <div class="metric-label">STAMMERS</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value low" id="pauseCount">0</div>
+                            <div class="metric-label">LONG PAUSES</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value low" id="silenceRatio">0%</div>
+                            <div class="metric-label">SILENCE</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value low" id="wordCount">0</div>
+                            <div class="metric-label">WORDS</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Analysis -->
+                <div class="card ai-panel" style="margin-top: 12px;">
+                    <div class="ai-header">
+                        <div class="card-title" style="margin: 0;">🤖 AI Analysis (Qwen)</div>
+                        <div class="ai-status">
+                            <span class="status-dot" id="aiDot"></span>
+                            <span id="aiStatus">Disconnected</span>
+                        </div>
+                    </div>
+                    <div class="ai-summary" id="aiSummary">
+                        Start speaking to receive AI-powered speech friction analysis...
+                    </div>
+                </div>
+
+                <!-- Detection Log -->
+                <div class="card" style="margin-top: 12px;">
+                    <div class="card-title">📋 Detection Log</div>
+                    <div class="detection-log" id="detectionLog">
+                        <div style="color: #64748b; text-align: center; padding: 16px; font-size: 0.8rem;">
+                            Detections will appear here
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // ADHARA SPEECH ANALYZER v1
+        // ============================================
+
+        const OLLAMA_URL = 'http://localhost:11434';
+        const MODEL = 'qwen2.5-coder:7b';
+        const AI_INTERVAL = 5000; // 5 seconds
+
+        // Age-based baselines (synthetic)
+        const AGE_BASELINES = {
+            '6-8': {
+                avgSpeechRateWPM: 100,
+                avgPauseDurationMs: 800,
+                avgFillerWords: 5,
+                avgStammerCount: 2,
+                avgSilenceRatio: 0.20,
+            },
+            '9-11': {
+                avgSpeechRateWPM: 120,
+                avgPauseDurationMs: 500,
+                avgFillerWords: 3,
+                avgStammerCount: 1,
+                avgSilenceRatio: 0.15,
+            },
+            '12-14': {
+                avgSpeechRateWPM: 140,
+                avgPauseDurationMs: 400,
+                avgFillerWords: 2,
+                avgStammerCount: 1,
+                avgSilenceRatio: 0.12,
+            },
+            '15+': {
+                avgSpeechRateWPM: 150,
+                avgPauseDurationMs: 300,
+                avgFillerWords: 1,
+                avgStammerCount: 0,
+                avgSilenceRatio: 0.10,
+            },
+        };
+
+        // Filler words to detect
+        const FILLER_WORDS = ['um', 'uh', 'er', 'ah', 'like', 'you know', 'basically', 'actually', 'literally', 'so', 'well'];
+
+        // State
+        let isRecording = false;
+        let audioContext = null;
+        let analyser = null;
+        let microphone = null;
+        let recognition = null;
+        let startTime = null;
+        let lastAiCall = 0;
+
+        // Metrics
+        let metrics = {
+            wordCount: 0,
+            speechRate: 0,
+            fillerCount: 0,
+            stammerCount: 0,
+            pauseCount: 0,
+            silenceRatio: 0,
+            silenceTime: 0,
+            totalTime: 0,
+            lastSpeechTime: 0,
+            words: [],
+            detections: [],
+        };
+
+        // Transcript
+        let finalTranscript = '';
+        let interimTranscript = '';
+
+        // Canvas
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas.getContext('2d');
+        let animationId = null;
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        function init() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            testOllama();
+
+            document.getElementById('startBtn').addEventListener('click', startRecording);
+            document.getElementById('stopBtn').addEventListener('click', stopRecording);
+            document.getElementById('resetBtn').addEventListener('click', resetAll);
+        }
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        async function testOllama() {
+            try {
+                const res = await fetch(`${OLLAMA_URL}/api/tags`);
+                if (res.ok) {
+                    document.getElementById('aiDot').className = 'status-dot ready';
+                    document.getElementById('aiStatus').textContent = 'Connected';
+                }
+            } catch (e) {
+                document.getElementById('aiDot').className = 'status-dot';
+                document.getElementById('aiStatus').textContent = 'Not connected';
+            }
+        }
+
+        // ============================================
+        // AUDIO CAPTURE
+        // ============================================
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                microphone = audioContext.createMediaStreamSource(stream);
+                microphone.connect(analyser);
+
+                isRecording = true;
+                startTime = Date.now();
+                metrics.lastSpeechTime = startTime;
+
+                document.getElementById('startBtn').disabled = true;
+                document.getElementById('stopBtn').disabled = false;
+                document.getElementById('statusDot').className = 'status-dot recording';
+                document.getElementById('statusText').textContent = 'Recording...';
+
+                startSpeechRecognition();
+                drawWaveform();
+                updateDuration();
+
+            } catch (err) {
+                console.error('Microphone error:', err);
+                document.getElementById('statusText').textContent = 'Mic denied';
+            }
+        }
+
+        function stopRecording() {
+            isRecording = false;
+
+            if (microphone) {
+                microphone.disconnect();
+            }
+            if (audioContext) {
+                audioContext.close();
+            }
+            if (recognition) {
+                recognition.stop();
+            }
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('statusDot').className = 'status-dot';
+            document.getElementById('statusText').textContent = 'Stopped';
+
+            // Final AI analysis
+            analyzeWithAI(true);
+        }
+
+        function resetAll() {
+            stopRecording();
+            finalTranscript = '';
+            interimTranscript = '';
+            metrics = {
+                wordCount: 0,
+                speechRate: 0,
+                fillerCount: 0,
+                stammerCount: 0,
+                pauseCount: 0,
+                silenceRatio: 0,
+                silenceTime: 0,
+                totalTime: 0,
+                lastSpeechTime: 0,
+                words: [],
+                detections: [],
+            };
+
+            document.getElementById('transcript').innerHTML = 'Click START and begin speaking...';
+            document.getElementById('detectionLog').innerHTML = '<div style="color: #64748b; text-align: center; padding: 16px; font-size: 0.8rem;">Detections will appear here</div>';
+            document.getElementById('aiSummary').textContent = 'Start speaking to receive AI-powered speech friction analysis...';
+            document.getElementById('durationDisplay').textContent = '00:00';
+            document.getElementById('frictionLevel').textContent = 'READY';
+            document.getElementById('frictionDisplay').className = 'friction-display low';
+
+            updateMetricsDisplay();
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // ============================================
+        // WAVEFORM VISUALIZATION
+        // ============================================
+
+        function drawWaveform() {
+            if (!isRecording) return;
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+
+            // Calculate volume
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const value = (dataArray[i] - 128) / 128;
+                sum += value * value;
+            }
+            const volume = Math.sqrt(sum / bufferLength);
+            const volumePercent = Math.min(volume * 300, 100);
+            document.getElementById('volumeFill').style.width = volumePercent + '%';
+
+            // Detect silence
+            if (volumePercent < 5) {
+                const now = Date.now();
+                const silenceDuration = now - metrics.lastSpeechTime;
+                if (silenceDuration > 1000) {
+                    metrics.silenceTime += 16; // Approximate frame time
+                }
+            } else {
+                metrics.lastSpeechTime = Date.now();
+            }
+
+            // Draw waveform
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#06b6d4';
+            ctx.beginPath();
+
+            const sliceWidth = canvas.width / bufferLength;
+            let x = 0;
+
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * canvas.height) / 2;
+
+                if (i === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+
+                x += sliceWidth;
+            }
+
+            ctx.lineTo(canvas.width, canvas.height / 2);
+            ctx.stroke();
+
+            animationId = requestAnimationFrame(drawWaveform);
+        }
+
+        function updateDuration() {
+            if (!isRecording) return;
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('durationDisplay').textContent = `${mins}:${secs}`;
+
+            metrics.totalTime = elapsed;
+            if (metrics.totalTime > 0) {
+                metrics.silenceRatio = metrics.silenceTime / (metrics.totalTime * 1000);
+                metrics.speechRate = Math.round((metrics.wordCount / metrics.totalTime) * 60);
+            }
+
+            updateMetricsDisplay();
+
+            // AI analysis every 5 seconds
+            const now = Date.now();
+            if (now - lastAiCall > AI_INTERVAL && metrics.wordCount > 5) {
+                lastAiCall = now;
+                analyzeWithAI(false);
+            }
+
+            setTimeout(updateDuration, 1000);
+        }
+
+        // ============================================
+        // SPEECH RECOGNITION
+        // ============================================
+
+        function startSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                console.warn('Speech recognition not supported');
+                document.getElementById('transcript').innerHTML = '<em style="color: #f59e0b;">Speech recognition not supported in this browser. Try Chrome.</em>';
+                return;
+            }
+
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            let lastWord = '';
+            let lastWordTime = Date.now();
+
+            recognition.onresult = (event) => {
+                interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+
+                    if (event.results[i].isFinal) {
+                        // Check for pause
+                        const now = Date.now();
+                        const pauseDuration = now - lastWordTime;
+                        const ageGroup = document.getElementById('ageSelect').value;
+                        const baseline = AGE_BASELINES[ageGroup];
+
+                        if (pauseDuration > baseline.avgPauseDurationMs * 2) {
+                            metrics.pauseCount++;
+                            addDetection('pause', `Long pause: ${Math.round(pauseDuration / 1000)}s`);
+                        }
+
+                        // Process words
+                        const words = transcript.toLowerCase().split(/\s+/);
+                        words.forEach(word => {
+                            if (word.length > 0) {
+                                metrics.wordCount++;
+                                metrics.words.push(word);
+
+                                // Check for fillers
+                                if (FILLER_WORDS.includes(word)) {
+                                    metrics.fillerCount++;
+                                    addDetection('filler', `Filler: "${word}"`);
+                                }
+
+                                // Check for stammers (repeated words)
+                                if (word === lastWord && word.length > 2) {
+                                    metrics.stammerCount++;
+                                    addDetection('stammer', `Repeated: "${word}"`);
+                                }
+
+                                lastWord = word;
+                            }
+                        });
+
+                        finalTranscript += highlightTranscript(transcript) + ' ';
+                        lastWordTime = now;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                document.getElementById('transcript').innerHTML = 
+                    finalTranscript + 
+                    (interimTranscript ? `<span class="interim">${interimTranscript}</span>` : '');
+
+                // Auto-scroll
+                const transcriptBox = document.getElementById('transcript');
+                transcriptBox.scrollTop = transcriptBox.scrollHeight;
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'not-allowed') {
+                    document.getElementById('transcript').innerHTML = '<em style="color: #ef4444;">Microphone permission denied</em>';
+                }
+            };
+
+            recognition.onend = () => {
+                if (isRecording) {
+                    recognition.start(); // Restart if still recording
+                }
+            };
+
+            recognition.start();
+        }
+
+        function highlightTranscript(text) {
+            let result = text;
+            FILLER_WORDS.forEach(filler => {
+                const regex = new RegExp(`\\b${filler}\\b`, 'gi');
+                result = result.replace(regex, `<span class="filler">${filler}</span>`);
+            });
+            return result;
+        }
+
+        function addDetection(type, message) {
+            metrics.detections.push({ type, message, time: Date.now() });
+
+            const log = document.getElementById('detectionLog');
+            if (metrics.detections.length === 1) {
+                log.innerHTML = '';
+            }
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const timeStr = `${Math.floor(elapsed / 60)}:${(elapsed % 60).toString().padStart(2, '0')}`;
+
+            log.innerHTML = `<div class="detection-item ${type}">
+                <span>${message}</span>
+                <span style="color: #64748b;">${timeStr}</span>
+            </div>` + log.innerHTML;
+        }
+
+        // ============================================
+        // METRICS & FRICTION
+        // ============================================
+
+        function updateMetricsDisplay() {
+            const ageGroup = document.getElementById('ageSelect').value;
+            const baseline = AGE_BASELINES[ageGroup];
+
+            document.getElementById('speechRate').textContent = metrics.speechRate;
+            document.getElementById('fillerCount').textContent = metrics.fillerCount;
+            document.getElementById('stammerCount').textContent = metrics.stammerCount;
+            document.getElementById('pauseCount').textContent = metrics.pauseCount;
+            document.getElementById('silenceRatio').textContent = Math.round(metrics.silenceRatio * 100) + '%';
+            document.getElementById('wordCount').textContent = metrics.wordCount;
+
+            // Calculate friction
+            const deviations = calculateDeviations(baseline);
+            const avgDeviation = Object.values(deviations).reduce((a, b) => a + b, 0) / Object.keys(deviations).length;
+
+            let level = 'low';
+            if (avgDeviation > 0.7) level = 'high';
+            else if (avgDeviation > 0.3) level = 'medium';
+
+            document.getElementById('frictionLevel').textContent = level.toUpperCase();
+            document.getElementById('frictionDisplay').className = `friction-display ${level}`;
+
+            // Color metrics
+            colorMetric('speechRate', Math.abs(metrics.speechRate - baseline.avgSpeechRateWPM) / baseline.avgSpeechRateWPM);
+            colorMetric('fillerCount', metrics.fillerCount / Math.max(baseline.avgFillerWords, 1));
+            colorMetric('stammerCount', metrics.stammerCount / Math.max(baseline.avgStammerCount, 1));
+        }
+
+        function colorMetric(id, deviation) {
+            const el = document.getElementById(id);
+            if (deviation > 0.7) el.className = 'metric-value high';
+            else if (deviation > 0.3) el.className = 'metric-value medium';
+            else el.className = 'metric-value low';
+        }
+
+        function calculateDeviations(baseline) {
+            return {
+                speechRate: Math.abs(metrics.speechRate - baseline.avgSpeechRateWPM) / baseline.avgSpeechRateWPM,
+                fillers: metrics.fillerCount / Math.max(baseline.avgFillerWords * (metrics.totalTime / 60), 1),
+                stammers: metrics.stammerCount / Math.max(baseline.avgStammerCount * (metrics.totalTime / 60), 1),
+                silenceRatio: Math.abs(metrics.silenceRatio - baseline.avgSilenceRatio) / baseline.avgSilenceRatio,
+            };
+        }
+
+        // ============================================
+        // AI ANALYSIS
+        // ============================================
+
+        async function analyzeWithAI(isFinal = false) {
+            const aiSummary = document.getElementById('aiSummary');
+            const aiDot = document.getElementById('aiDot');
+            const aiStatus = document.getElementById('aiStatus');
+
+            if (metrics.wordCount < 5) {
+                return;
+            }
+
+            aiDot.className = 'status-dot recording';
+            aiStatus.textContent = 'Analyzing...';
+
+            const ageGroup = document.getElementById('ageSelect').value;
+            const baseline = AGE_BASELINES[ageGroup];
+
+            const prompt = `Analyze this speech data for a learner in age group ${ageGroup}:
+
+METRICS:
+- Words spoken: ${metrics.wordCount}
+- Speech rate: ${metrics.speechRate} WPM (baseline: ${baseline.avgSpeechRateWPM} WPM)
+- Filler words: ${metrics.fillerCount} (baseline: ${baseline.avgFillerWords})
+- Stammers/repeats: ${metrics.stammerCount} (baseline: ${baseline.avgStammerCount})
+- Long pauses: ${metrics.pauseCount}
+- Silence ratio: ${Math.round(metrics.silenceRatio * 100)}% (baseline: ${Math.round(baseline.avgSilenceRatio * 100)}%)
+- Duration: ${metrics.totalTime} seconds
+
+Provide a brief speech friction assessment. Use this format:
+
+Friction Level: [Low/Medium/High]
+Summary: [2-3 sentences about the speech patterns observed]
+Recommendation: Human review suggested
+
+Do not use medical terms. Focus on behavioral indicators only.`;
+
+            try {
+                const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: MODEL,
+                        prompt: prompt,
+                        stream: false,
+                        options: { temperature: 0.3 }
+                    }),
+                });
+
+                if (!response.ok) throw new Error('API error');
+
+                const data = await response.json();
+                aiSummary.textContent = data.response;
+                aiDot.className = 'status-dot ready';
+                aiStatus.textContent = 'Connected';
+
+            } catch (error) {
+                console.error('AI analysis error:', error);
+                aiDot.className = 'status-dot';
+                aiStatus.textContent = 'Error';
+
+                // Fallback local analysis
+                const deviations = calculateDeviations(baseline);
+                const avgDev = Object.values(deviations).reduce((a, b) => a + b, 0) / 4;
+                let level = avgDev > 0.7 ? 'High' : avgDev > 0.3 ? 'Medium' : 'Low';
+
+                aiSummary.textContent = `Friction Level: ${level}\n\nSummary: Speech rate was ${metrics.speechRate} WPM compared to expected ${baseline.avgSpeechRateWPM} WPM. ${metrics.fillerCount} filler words and ${metrics.stammerCount} repetitions were detected.\n\nRecommendation: Human review suggested`;
+            }
+        }
+
+        // Initialize
+        init();
+    </script>
+</body>
+
+</html>
