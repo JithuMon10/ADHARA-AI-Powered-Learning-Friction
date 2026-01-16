@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ADHARA — Speech Analyzer v1</title>
+    <title>ADHARA — Speech Analyzer v2</title>
     <style>
         * {
             margin: 0;
@@ -46,7 +46,7 @@
 
         .main-grid {
             display: grid;
-            grid-template-columns: 1fr 380px;
+            grid-template-columns: 1fr 400px;
             gap: 16px;
         }
 
@@ -72,7 +72,7 @@
             background: #000;
             border-radius: 10px;
             overflow: hidden;
-            height: 200px;
+            height: 180px;
         }
 
         #waveformCanvas {
@@ -116,8 +116,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
         }
 
         /* Controls */
@@ -135,7 +142,6 @@
             cursor: pointer;
             border: none;
             font-size: 0.9rem;
-            transition: all 0.2s;
         }
 
         .btn-start {
@@ -158,8 +164,20 @@
             cursor: not-allowed;
         }
 
-        .btn:hover:not(:disabled) {
-            transform: translateY(-1px);
+        /* Volume Meter */
+        .volume-meter {
+            height: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .volume-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #06b6d4);
+            transition: width 0.05s;
+            border-radius: 4px;
         }
 
         /* Transcript */
@@ -167,11 +185,11 @@
             background: rgba(0, 0, 0, 0.4);
             border-radius: 8px;
             padding: 12px;
-            min-height: 120px;
-            max-height: 200px;
+            min-height: 150px;
+            max-height: 250px;
             overflow-y: auto;
             font-size: 0.9rem;
-            line-height: 1.6;
+            line-height: 1.7;
             color: #e2e8f0;
         }
 
@@ -187,14 +205,19 @@
             color: #fbbf24;
         }
 
-        .transcript-box .stammer {
+        .transcript-box .hesitation {
             background: rgba(239, 68, 68, 0.3);
             padding: 0 4px;
             border-radius: 3px;
             color: #f87171;
         }
 
-        /* Metrics Grid */
+        .transcript-box .pause-marker {
+            color: #8b5cf6;
+            font-weight: bold;
+        }
+
+        /* Metrics */
         .metrics-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -205,25 +228,33 @@
         .metric {
             background: rgba(30, 41, 59, 0.8);
             border-radius: 8px;
-            padding: 12px;
+            padding: 10px;
             text-align: center;
         }
 
         .metric-value {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: 700;
             font-family: monospace;
         }
 
         .metric-label {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             color: #64748b;
             margin-top: 2px;
         }
 
-        .metric-value.low { color: #10b981; }
-        .metric-value.medium { color: #f59e0b; }
-        .metric-value.high { color: #ef4444; }
+        .metric-value.low {
+            color: #10b981;
+        }
+
+        .metric-value.medium {
+            color: #f59e0b;
+        }
+
+        .metric-value.high {
+            color: #ef4444;
+        }
 
         /* Friction Display */
         .friction-display {
@@ -289,48 +320,9 @@
             color: #e2e8f0;
         }
 
-        /* Volume Meter */
-        .volume-meter {
-            height: 8px;
-            background: #1e293b;
-            border-radius: 4px;
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .volume-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #06b6d4);
-            transition: width 0.1s;
-            border-radius: 4px;
-        }
-
-        /* Age Select */
-        .age-select {
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(71, 85, 105, 0.5);
-            border-radius: 6px;
-            padding: 8px 12px;
-            color: #e2e8f0;
-            font-size: 0.85rem;
-            width: 100%;
-            margin-bottom: 12px;
-        }
-
-        /* Disclaimer */
-        .disclaimer {
-            margin-top: 12px;
-            padding: 10px;
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 6px;
-            font-size: 0.75rem;
-            color: #fbbf24;
-        }
-
         /* Detection Log */
         .detection-log {
-            max-height: 150px;
+            max-height: 140px;
             overflow-y: auto;
         }
 
@@ -348,12 +340,54 @@
             border-left: 3px solid #f59e0b;
         }
 
-        .detection-item.stammer {
+        .detection-item.hesitation {
             border-left: 3px solid #ef4444;
         }
 
         .detection-item.pause {
             border-left: 3px solid #8b5cf6;
+        }
+
+        .detection-item.lag {
+            border-left: 3px solid #06b6d4;
+        }
+
+        .age-select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #e2e8f0;
+            font-size: 0.85rem;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .disclaimer {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: #fbbf24;
+        }
+
+        /* Browser warning */
+        .browser-warning {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+            display: none;
+        }
+
+        /* Export data button */
+        .export-section {
+            margin-top: 12px;
+            text-align: center;
         }
     </style>
 </head>
@@ -361,9 +395,14 @@
 <body>
     <div class="container">
         <header>
-            <h1>🎤 ADHARA Speech Analyzer v1</h1>
-            <p class="subtitle">Real-time speech pattern analysis for learning friction detection</p>
+            <h1>🎤 ADHARA Speech Analyzer v2</h1>
+            <p class="subtitle">Real-time speech pattern analysis with hesitation & lag detection</p>
         </header>
+
+        <div class="browser-warning" id="browserWarning">
+            ⚠️ Speech recognition works best in <strong>Google Chrome</strong>.
+            Please open this page in Chrome for full functionality.
+        </div>
 
         <div class="main-grid">
             <!-- Left: Audio Capture -->
@@ -382,7 +421,11 @@
                     </div>
 
                     <div style="margin-top: 12px;">
-                        <div class="card-title">🔊 Volume Level</div>
+                        <div
+                            style="display: flex; justify-content: space-between; font-size: 0.75rem; margin-bottom: 4px;">
+                            <span>🔊 Volume Level</span>
+                            <span id="volumeValue">0%</span>
+                        </div>
                         <div class="volume-meter">
                             <div class="volume-fill" id="volumeFill" style="width: 0%"></div>
                         </div>
@@ -398,13 +441,14 @@
                 <div class="card" style="margin-top: 12px;">
                     <div class="card-title">📝 Live Transcript</div>
                     <div class="transcript-box" id="transcript">
-                        Click START and begin speaking. Your speech will be transcribed here...
+                        <span style="color: #64748b;">Click START and begin speaking. Your speech will appear here with
+                            highlighted patterns...</span>
                     </div>
                 </div>
 
                 <div class="disclaimer">
-                    ⚠️ <strong>Demo Only:</strong> Speech analysis uses browser APIs and may vary by browser/device.
-                    Not for assessment purposes. All data is processed locally.
+                    ⚠️ <strong>Demo Only:</strong> Speech recognition uses browser APIs (Chrome recommended).
+                    Results vary by accent, mic quality, and environment. Not for assessment purposes.
                 </div>
             </div>
 
@@ -438,16 +482,16 @@
                             <div class="metric-label">FILLERS</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value low" id="stammerCount">0</div>
-                            <div class="metric-label">STAMMERS</div>
+                            <div class="metric-value low" id="hesitationCount">0</div>
+                            <div class="metric-label">HESITATIONS</div>
                         </div>
                         <div class="metric">
                             <div class="metric-value low" id="pauseCount">0</div>
                             <div class="metric-label">LONG PAUSES</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value low" id="silenceRatio">0%</div>
-                            <div class="metric-label">SILENCE</div>
+                            <div class="metric-value low" id="lagCount">0</div>
+                            <div class="metric-label">LAG/DELAYS</div>
                         </div>
                         <div class="metric">
                             <div class="metric-value low" id="wordCount">0</div>
@@ -459,10 +503,10 @@
                 <!-- AI Analysis -->
                 <div class="card ai-panel" style="margin-top: 12px;">
                     <div class="ai-header">
-                        <div class="card-title" style="margin: 0;">🤖 AI Analysis (Qwen)</div>
+                        <div class="card-title" style="margin: 0;">🤖 AI Analysis</div>
                         <div class="ai-status">
                             <span class="status-dot" id="aiDot"></span>
-                            <span id="aiStatus">Disconnected</span>
+                            <span id="aiStatus">Connecting...</span>
                         </div>
                     </div>
                     <div class="ai-summary" id="aiSummary">
@@ -475,9 +519,17 @@
                     <div class="card-title">📋 Detection Log</div>
                     <div class="detection-log" id="detectionLog">
                         <div style="color: #64748b; text-align: center; padding: 16px; font-size: 0.8rem;">
-                            Detections will appear here
+                            Speech patterns will be detected here
                         </div>
                     </div>
+                </div>
+
+                <!-- Export for Combined Analysis -->
+                <div class="export-section">
+                    <button class="btn btn-reset" id="exportBtn"
+                        style="flex: none; padding: 8px 16px; font-size: 0.8rem;">
+                        📤 Export Data (for combined analysis)
+                    </button>
                 </div>
             </div>
         </div>
@@ -485,47 +537,25 @@
 
     <script>
         // ============================================
-        // ADHARA SPEECH ANALYZER v1
+        // ADHARA SPEECH ANALYZER v2
+        // Enhanced with hesitation, lag, and combined analysis export
         // ============================================
 
         const OLLAMA_URL = 'http://localhost:11434';
-        const MODEL = 'qwen2.5-coder:7b';
-        const AI_INTERVAL = 5000; // 5 seconds
+        const MODEL = 'qwen2.5-coder:7b-instruct-q4_K_M';
+        const AI_INTERVAL = 4000; // 4 seconds
 
-        // Age-based baselines (synthetic)
+        // Filler words and hesitation sounds
+        const FILLER_WORDS = ['um', 'uh', 'er', 'ah', 'like', 'you know', 'basically', 'actually', 'literally', 'so', 'well', 'right', 'okay'];
+        const HESITATION_PATTERNS = ['uhh', 'umm', 'uhm', 'hmm', 'ahh', 'err', 'mmm', 'erm', 'uuh'];
+
+        // Age-based baselines
         const AGE_BASELINES = {
-            '6-8': {
-                avgSpeechRateWPM: 100,
-                avgPauseDurationMs: 800,
-                avgFillerWords: 5,
-                avgStammerCount: 2,
-                avgSilenceRatio: 0.20,
-            },
-            '9-11': {
-                avgSpeechRateWPM: 120,
-                avgPauseDurationMs: 500,
-                avgFillerWords: 3,
-                avgStammerCount: 1,
-                avgSilenceRatio: 0.15,
-            },
-            '12-14': {
-                avgSpeechRateWPM: 140,
-                avgPauseDurationMs: 400,
-                avgFillerWords: 2,
-                avgStammerCount: 1,
-                avgSilenceRatio: 0.12,
-            },
-            '15+': {
-                avgSpeechRateWPM: 150,
-                avgPauseDurationMs: 300,
-                avgFillerWords: 1,
-                avgStammerCount: 0,
-                avgSilenceRatio: 0.10,
-            },
+            '6-8': { avgSpeechRateWPM: 100, avgPauseDurationMs: 800, avgFillerWords: 5, avgHesitations: 3 },
+            '9-11': { avgSpeechRateWPM: 120, avgPauseDurationMs: 500, avgFillerWords: 3, avgHesitations: 2 },
+            '12-14': { avgSpeechRateWPM: 140, avgPauseDurationMs: 400, avgFillerWords: 2, avgHesitations: 1 },
+            '15+': { avgSpeechRateWPM: 150, avgPauseDurationMs: 300, avgFillerWords: 1, avgHesitations: 1 },
         };
-
-        // Filler words to detect
-        const FILLER_WORDS = ['um', 'uh', 'er', 'ah', 'like', 'you know', 'basically', 'actually', 'literally', 'so', 'well'];
 
         // State
         let isRecording = false;
@@ -535,30 +565,51 @@
         let recognition = null;
         let startTime = null;
         let lastAiCall = 0;
+        let lastSpeechTime = 0;
+        let consecutiveSilenceFrames = 0;
 
-        // Metrics
+        // Metrics (exportable for combined analysis)
         let metrics = {
             wordCount: 0,
             speechRate: 0,
             fillerCount: 0,
-            stammerCount: 0,
+            hesitationCount: 0,
             pauseCount: 0,
-            silenceRatio: 0,
-            silenceTime: 0,
+            lagCount: 0,
             totalTime: 0,
-            lastSpeechTime: 0,
+            silenceTime: 0,
             words: [],
             detections: [],
+            timestamps: []
         };
 
-        // Transcript
         let finalTranscript = '';
         let interimTranscript = '';
 
-        // Canvas
         const canvas = document.getElementById('waveformCanvas');
         const ctx = canvas.getContext('2d');
         let animationId = null;
+
+        // ============================================
+        // BROWSER CHECK
+        // ============================================
+
+        function checkBrowser() {
+            const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+            const isEdge = /Edg/.test(navigator.userAgent);
+
+            if (!isChrome && !isEdge) {
+                document.getElementById('browserWarning').style.display = 'block';
+            }
+
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                document.getElementById('transcript').innerHTML =
+                    '<span style="color: #ef4444;">❌ Speech recognition not supported. Please use Google Chrome.</span>';
+                document.getElementById('startBtn').disabled = true;
+                return false;
+            }
+            return true;
+        }
 
         // ============================================
         // INITIALIZATION
@@ -567,11 +618,15 @@
         function init() {
             resizeCanvas();
             window.addEventListener('resize', resizeCanvas);
-            testOllama();
+
+            if (checkBrowser()) {
+                testOllama();
+            }
 
             document.getElementById('startBtn').addEventListener('click', startRecording);
             document.getElementById('stopBtn').addEventListener('click', stopRecording);
             document.getElementById('resetBtn').addEventListener('click', resetAll);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
         }
 
         function resizeCanvas() {
@@ -584,8 +639,10 @@
             try {
                 const res = await fetch(`${OLLAMA_URL}/api/tags`);
                 if (res.ok) {
+                    const data = await res.json();
+                    const hasQwen = data.models?.some(m => m.name.includes('qwen'));
                     document.getElementById('aiDot').className = 'status-dot ready';
-                    document.getElementById('aiStatus').textContent = 'Connected';
+                    document.getElementById('aiStatus').textContent = hasQwen ? 'Connected' : 'No Qwen';
                 }
             } catch (e) {
                 document.getElementById('aiDot').className = 'status-dot';
@@ -594,27 +651,36 @@
         }
 
         // ============================================
-        // AUDIO CAPTURE
+        // RECORDING
         // ============================================
 
         async function startRecording() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true
+                    }
+                });
 
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 2048;
+                analyser.smoothingTimeConstant = 0.8;
                 microphone = audioContext.createMediaStreamSource(stream);
                 microphone.connect(analyser);
 
                 isRecording = true;
                 startTime = Date.now();
-                metrics.lastSpeechTime = startTime;
+                lastSpeechTime = startTime;
+                consecutiveSilenceFrames = 0;
 
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;
                 document.getElementById('statusDot').className = 'status-dot recording';
                 document.getElementById('statusText').textContent = 'Recording...';
+                document.getElementById('transcript').innerHTML = '<span class="interim">Listening...</span>';
 
                 startSpeechRecognition();
                 drawWaveform();
@@ -623,24 +689,18 @@
             } catch (err) {
                 console.error('Microphone error:', err);
                 document.getElementById('statusText').textContent = 'Mic denied';
+                document.getElementById('transcript').innerHTML =
+                    '<span style="color: #ef4444;">❌ Microphone access denied. Please allow microphone permission.</span>';
             }
         }
 
         function stopRecording() {
             isRecording = false;
 
-            if (microphone) {
-                microphone.disconnect();
-            }
-            if (audioContext) {
-                audioContext.close();
-            }
-            if (recognition) {
-                recognition.stop();
-            }
-            if (animationId) {
-                cancelAnimationFrame(animationId);
-            }
+            if (microphone) microphone.disconnect();
+            if (audioContext) audioContext.close();
+            if (recognition) recognition.stop();
+            if (animationId) cancelAnimationFrame(animationId);
 
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
@@ -648,7 +708,9 @@
             document.getElementById('statusText').textContent = 'Stopped';
 
             // Final AI analysis
-            analyzeWithAI(true);
+            if (metrics.wordCount > 3) {
+                analyzeWithAI(true);
+            }
         }
 
         function resetAll() {
@@ -659,19 +721,19 @@
                 wordCount: 0,
                 speechRate: 0,
                 fillerCount: 0,
-                stammerCount: 0,
+                hesitationCount: 0,
                 pauseCount: 0,
-                silenceRatio: 0,
-                silenceTime: 0,
+                lagCount: 0,
                 totalTime: 0,
-                lastSpeechTime: 0,
+                silenceTime: 0,
                 words: [],
                 detections: [],
+                timestamps: []
             };
 
-            document.getElementById('transcript').innerHTML = 'Click START and begin speaking...';
-            document.getElementById('detectionLog').innerHTML = '<div style="color: #64748b; text-align: center; padding: 16px; font-size: 0.8rem;">Detections will appear here</div>';
-            document.getElementById('aiSummary').textContent = 'Start speaking to receive AI-powered speech friction analysis...';
+            document.getElementById('transcript').innerHTML = '<span style="color: #64748b;">Click START and begin speaking...</span>';
+            document.getElementById('detectionLog').innerHTML = '<div style="color: #64748b; text-align: center; padding: 16px; font-size: 0.8rem;">Speech patterns will be detected here</div>';
+            document.getElementById('aiSummary').textContent = 'Start speaking to receive AI analysis...';
             document.getElementById('durationDisplay').textContent = '00:00';
             document.getElementById('frictionLevel').textContent = 'READY';
             document.getElementById('frictionDisplay').className = 'friction-display low';
@@ -681,7 +743,7 @@
         }
 
         // ============================================
-        // WAVEFORM VISUALIZATION
+        // WAVEFORM & VOLUME
         // ============================================
 
         function drawWaveform() {
@@ -698,26 +760,43 @@
                 sum += value * value;
             }
             const volume = Math.sqrt(sum / bufferLength);
-            const volumePercent = Math.min(volume * 300, 100);
-            document.getElementById('volumeFill').style.width = volumePercent + '%';
+            const volumePercent = Math.min(volume * 400, 100);
 
-            // Detect silence
-            if (volumePercent < 5) {
-                const now = Date.now();
-                const silenceDuration = now - metrics.lastSpeechTime;
-                if (silenceDuration > 1000) {
-                    metrics.silenceTime += 16; // Approximate frame time
+            document.getElementById('volumeFill').style.width = volumePercent + '%';
+            document.getElementById('volumeValue').textContent = Math.round(volumePercent) + '%';
+
+            // Silence/Lag detection
+            const now = Date.now();
+            if (volumePercent < 8) {
+                consecutiveSilenceFrames++;
+
+                // Detect lag (extended silence during speech)
+                if (consecutiveSilenceFrames > 60 && metrics.wordCount > 0) { // ~1 second of silence
+                    const silenceDuration = now - lastSpeechTime;
+                    if (silenceDuration > 1500 && silenceDuration < 5000) {
+                        // Only count as lag if it's been a while since last lag detection
+                        const lastLag = metrics.detections.filter(d => d.type === 'lag').pop();
+                        if (!lastLag || now - lastLag.time > 3000) {
+                            metrics.lagCount++;
+                            addDetection('lag', `Speech lag: ${(silenceDuration / 1000).toFixed(1)}s`);
+                        }
+                    }
                 }
+
+                metrics.silenceTime += 16;
             } else {
-                metrics.lastSpeechTime = Date.now();
+                if (consecutiveSilenceFrames > 30) { // Was silent for ~0.5s
+                    lastSpeechTime = now;
+                }
+                consecutiveSilenceFrames = 0;
             }
 
             // Draw waveform
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             ctx.lineWidth = 2;
-            ctx.strokeStyle = '#06b6d4';
+            ctx.strokeStyle = volumePercent > 20 ? '#10b981' : '#06b6d4';
             ctx.beginPath();
 
             const sliceWidth = canvas.width / bufferLength;
@@ -726,13 +805,8 @@
             for (let i = 0; i < bufferLength; i++) {
                 const v = dataArray[i] / 128.0;
                 const y = (v * canvas.height) / 2;
-
-                if (i === 0) {
-                    ctx.moveTo(x, y);
-                } else {
-                    ctx.lineTo(x, y);
-                }
-
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
                 x += sliceWidth;
             }
 
@@ -752,15 +826,14 @@
 
             metrics.totalTime = elapsed;
             if (metrics.totalTime > 0) {
-                metrics.silenceRatio = metrics.silenceTime / (metrics.totalTime * 1000);
                 metrics.speechRate = Math.round((metrics.wordCount / metrics.totalTime) * 60);
             }
 
             updateMetricsDisplay();
 
-            // AI analysis every 5 seconds
+            // AI analysis
             const now = Date.now();
-            if (now - lastAiCall > AI_INTERVAL && metrics.wordCount > 5) {
+            if (now - lastAiCall > AI_INTERVAL && metrics.wordCount > 3) {
                 lastAiCall = now;
                 analyzeWithAI(false);
             }
@@ -773,100 +846,137 @@
         // ============================================
 
         function startSpeechRecognition() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                console.warn('Speech recognition not supported');
-                document.getElementById('transcript').innerHTML = '<em style="color: #f59e0b;">Speech recognition not supported in this browser. Try Chrome.</em>';
-                return;
-            }
-
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.continuous = true;
             recognition.interimResults = true;
             recognition.lang = 'en-US';
+            recognition.maxAlternatives = 1;
 
             let lastWord = '';
             let lastWordTime = Date.now();
+            let recognitionRestarts = 0;
+
+            recognition.onstart = () => {
+                console.log('Speech recognition started');
+            };
 
             recognition.onresult = (event) => {
                 interimTranscript = '';
 
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
+                    const confidence = event.results[i][0].confidence;
 
                     if (event.results[i].isFinal) {
-                        // Check for pause
                         const now = Date.now();
                         const pauseDuration = now - lastWordTime;
                         const ageGroup = document.getElementById('ageSelect').value;
                         const baseline = AGE_BASELINES[ageGroup];
 
-                        if (pauseDuration > baseline.avgPauseDurationMs * 2) {
+                        // Long pause detection
+                        if (pauseDuration > baseline.avgPauseDurationMs * 2 && metrics.wordCount > 0) {
                             metrics.pauseCount++;
-                            addDetection('pause', `Long pause: ${Math.round(pauseDuration / 1000)}s`);
+                            addDetection('pause', `Long pause: ${(pauseDuration / 1000).toFixed(1)}s`);
                         }
 
                         // Process words
-                        const words = transcript.toLowerCase().split(/\s+/);
+                        const words = transcript.toLowerCase().trim().split(/\s+/);
                         words.forEach(word => {
-                            if (word.length > 0) {
+                            const cleanWord = word.replace(/[^a-z]/g, '');
+                            if (cleanWord.length > 0) {
                                 metrics.wordCount++;
-                                metrics.words.push(word);
+                                metrics.words.push(cleanWord);
+                                metrics.timestamps.push(now);
 
-                                // Check for fillers
-                                if (FILLER_WORDS.includes(word)) {
+                                // Filler detection
+                                if (FILLER_WORDS.includes(cleanWord)) {
                                     metrics.fillerCount++;
-                                    addDetection('filler', `Filler: "${word}"`);
+                                    addDetection('filler', `Filler: "${cleanWord}"`);
                                 }
 
-                                // Check for stammers (repeated words)
-                                if (word === lastWord && word.length > 2) {
-                                    metrics.stammerCount++;
-                                    addDetection('stammer', `Repeated: "${word}"`);
+                                // Hesitation sounds (uhh, umm, etc.)
+                                if (HESITATION_PATTERNS.some(p => cleanWord.includes(p) || cleanWord === p)) {
+                                    metrics.hesitationCount++;
+                                    addDetection('hesitation', `Hesitation: "${cleanWord}"`);
                                 }
 
-                                lastWord = word;
+                                // Repeated word (stammer)
+                                if (cleanWord === lastWord && cleanWord.length > 2) {
+                                    metrics.hesitationCount++;
+                                    addDetection('hesitation', `Repeated: "${cleanWord}"`);
+                                }
+
+                                lastWord = cleanWord;
                             }
                         });
 
                         finalTranscript += highlightTranscript(transcript) + ' ';
                         lastWordTime = now;
+                        lastSpeechTime = now;
+
                     } else {
                         interimTranscript += transcript;
                     }
                 }
 
-                document.getElementById('transcript').innerHTML = 
-                    finalTranscript + 
+                document.getElementById('transcript').innerHTML =
+                    finalTranscript +
                     (interimTranscript ? `<span class="interim">${interimTranscript}</span>` : '');
 
                 // Auto-scroll
-                const transcriptBox = document.getElementById('transcript');
-                transcriptBox.scrollTop = transcriptBox.scrollHeight;
+                const box = document.getElementById('transcript');
+                box.scrollTop = box.scrollHeight;
             };
 
             recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
                 if (event.error === 'not-allowed') {
-                    document.getElementById('transcript').innerHTML = '<em style="color: #ef4444;">Microphone permission denied</em>';
+                    document.getElementById('transcript').innerHTML =
+                        '<span style="color: #ef4444;">❌ Microphone permission denied</span>';
+                } else if (event.error === 'no-speech') {
+                    // This is normal, just means no speech detected
+                    console.log('No speech detected, continuing...');
                 }
             };
 
             recognition.onend = () => {
-                if (isRecording) {
-                    recognition.start(); // Restart if still recording
+                if (isRecording && recognitionRestarts < 50) {
+                    recognitionRestarts++;
+                    setTimeout(() => {
+                        if (isRecording) {
+                            try {
+                                recognition.start();
+                            } catch (e) {
+                                console.log('Recognition restart failed:', e);
+                            }
+                        }
+                    }, 100);
                 }
             };
 
-            recognition.start();
+            try {
+                recognition.start();
+            } catch (e) {
+                console.error('Failed to start recognition:', e);
+            }
         }
 
         function highlightTranscript(text) {
             let result = text;
+
+            // Highlight fillers
             FILLER_WORDS.forEach(filler => {
                 const regex = new RegExp(`\\b${filler}\\b`, 'gi');
                 result = result.replace(regex, `<span class="filler">${filler}</span>`);
             });
+
+            // Highlight hesitations
+            HESITATION_PATTERNS.forEach(pattern => {
+                const regex = new RegExp(`\\b${pattern}+\\b`, 'gi');
+                result = result.replace(regex, match => `<span class="hesitation">${match}</span>`);
+            });
+
             return result;
         }
 
@@ -897,26 +1007,37 @@
 
             document.getElementById('speechRate').textContent = metrics.speechRate;
             document.getElementById('fillerCount').textContent = metrics.fillerCount;
-            document.getElementById('stammerCount').textContent = metrics.stammerCount;
+            document.getElementById('hesitationCount').textContent = metrics.hesitationCount;
             document.getElementById('pauseCount').textContent = metrics.pauseCount;
-            document.getElementById('silenceRatio').textContent = Math.round(metrics.silenceRatio * 100) + '%';
+            document.getElementById('lagCount').textContent = metrics.lagCount;
             document.getElementById('wordCount').textContent = metrics.wordCount;
 
             // Calculate friction
-            const deviations = calculateDeviations(baseline);
-            const avgDeviation = Object.values(deviations).reduce((a, b) => a + b, 0) / Object.keys(deviations).length;
-
-            let level = 'low';
-            if (avgDeviation > 0.7) level = 'high';
-            else if (avgDeviation > 0.3) level = 'medium';
-
-            document.getElementById('frictionLevel').textContent = level.toUpperCase();
-            document.getElementById('frictionDisplay').className = `friction-display ${level}`;
+            const friction = calculateFriction(baseline);
+            document.getElementById('frictionLevel').textContent = friction.level;
+            document.getElementById('frictionDisplay').className = `friction-display ${friction.class}`;
 
             // Color metrics
             colorMetric('speechRate', Math.abs(metrics.speechRate - baseline.avgSpeechRateWPM) / baseline.avgSpeechRateWPM);
             colorMetric('fillerCount', metrics.fillerCount / Math.max(baseline.avgFillerWords, 1));
-            colorMetric('stammerCount', metrics.stammerCount / Math.max(baseline.avgStammerCount, 1));
+            colorMetric('hesitationCount', metrics.hesitationCount / Math.max(baseline.avgHesitations, 1));
+        }
+
+        function calculateFriction(baseline) {
+            if (metrics.totalTime < 3) return { level: 'READY', class: 'low' };
+
+            const timeMinutes = metrics.totalTime / 60;
+
+            const fillerScore = metrics.fillerCount / Math.max(baseline.avgFillerWords * timeMinutes, 1);
+            const hesitationScore = metrics.hesitationCount / Math.max(baseline.avgHesitations * timeMinutes, 1);
+            const rateDeviation = Math.abs(metrics.speechRate - baseline.avgSpeechRateWPM) / baseline.avgSpeechRateWPM;
+            const lagScore = metrics.lagCount / Math.max(timeMinutes * 2, 1);
+
+            const avgScore = (fillerScore + hesitationScore + rateDeviation + lagScore) / 4;
+
+            if (avgScore > 0.7) return { level: 'HIGH', class: 'high' };
+            if (avgScore > 0.3) return { level: 'MEDIUM', class: 'medium' };
+            return { level: 'LOW', class: 'low' };
         }
 
         function colorMetric(id, deviation) {
@@ -924,15 +1045,6 @@
             if (deviation > 0.7) el.className = 'metric-value high';
             else if (deviation > 0.3) el.className = 'metric-value medium';
             else el.className = 'metric-value low';
-        }
-
-        function calculateDeviations(baseline) {
-            return {
-                speechRate: Math.abs(metrics.speechRate - baseline.avgSpeechRateWPM) / baseline.avgSpeechRateWPM,
-                fillers: metrics.fillerCount / Math.max(baseline.avgFillerWords * (metrics.totalTime / 60), 1),
-                stammers: metrics.stammerCount / Math.max(baseline.avgStammerCount * (metrics.totalTime / 60), 1),
-                silenceRatio: Math.abs(metrics.silenceRatio - baseline.avgSilenceRatio) / baseline.avgSilenceRatio,
-            };
         }
 
         // ============================================
@@ -944,34 +1056,35 @@
             const aiDot = document.getElementById('aiDot');
             const aiStatus = document.getElementById('aiStatus');
 
-            if (metrics.wordCount < 5) {
-                return;
-            }
+            if (metrics.wordCount < 3) return;
 
             aiDot.className = 'status-dot recording';
             aiStatus.textContent = 'Analyzing...';
 
             const ageGroup = document.getElementById('ageSelect').value;
             const baseline = AGE_BASELINES[ageGroup];
+            const friction = calculateFriction(baseline);
 
-            const prompt = `Analyze this speech data for a learner in age group ${ageGroup}:
+            const prompt = `You are ADHARA, an AI helping educators detect speech-based learning friction. Analyze this student's verbal fluency during a learning task.
 
-METRICS:
-- Words spoken: ${metrics.wordCount}
-- Speech rate: ${metrics.speechRate} WPM (baseline: ${baseline.avgSpeechRateWPM} WPM)
-- Filler words: ${metrics.fillerCount} (baseline: ${baseline.avgFillerWords})
-- Stammers/repeats: ${metrics.stammerCount} (baseline: ${baseline.avgStammerCount})
-- Long pauses: ${metrics.pauseCount}
-- Silence ratio: ${Math.round(metrics.silenceRatio * 100)}% (baseline: ${Math.round(baseline.avgSilenceRatio * 100)}%)
-- Duration: ${metrics.totalTime} seconds
+Age Group: ${ageGroup} years old
+Duration: ${metrics.totalTime} seconds
 
-Provide a brief speech friction assessment. Use this format:
+Speech Metrics:
+- Words spoken: ${metrics.wordCount} at ${metrics.speechRate} WPM (expected: ${baseline.avgSpeechRateWPM} WPM)
+- Filler sounds (um, uh, like): ${metrics.fillerCount}
+- Hesitation patterns (uhh, repeated words): ${metrics.hesitationCount}
+- Extended pauses: ${metrics.pauseCount}
+- Speech delays/lags: ${metrics.lagCount}
 
-Friction Level: [Low/Medium/High]
-Summary: [2-3 sentences about the speech patterns observed]
-Recommendation: Human review suggested
+Recent detections: ${metrics.detections.slice(-4).map(d => d.message).join('; ') || 'none'}
 
-Do not use medical terms. Focus on behavioral indicators only.`;
+For the teacher, provide:
+1. A 1-sentence assessment of verbal fluency compared to age expectations
+2. One specific, actionable suggestion
+
+Do NOT diagnose. Use language like "may indicate" or "appears to suggest".
+End with: Friction: ${friction.level}`;
 
             try {
                 const response = await fetch(`${OLLAMA_URL}/api/generate`, {
@@ -981,29 +1094,61 @@ Do not use medical terms. Focus on behavioral indicators only.`;
                         model: MODEL,
                         prompt: prompt,
                         stream: false,
-                        options: { temperature: 0.3 }
+                        options: { temperature: 0.3, num_predict: 120 }
                     }),
                 });
 
                 if (!response.ok) throw new Error('API error');
 
                 const data = await response.json();
-                aiSummary.textContent = data.response;
+                aiSummary.textContent = data.response?.trim() || 'No response';
                 aiDot.className = 'status-dot ready';
                 aiStatus.textContent = 'Connected';
 
             } catch (error) {
-                console.error('AI analysis error:', error);
+                console.error('AI error:', error);
                 aiDot.className = 'status-dot';
                 aiStatus.textContent = 'Error';
 
-                // Fallback local analysis
-                const deviations = calculateDeviations(baseline);
-                const avgDev = Object.values(deviations).reduce((a, b) => a + b, 0) / 4;
-                let level = avgDev > 0.7 ? 'High' : avgDev > 0.3 ? 'Medium' : 'Low';
-
-                aiSummary.textContent = `Friction Level: ${level}\n\nSummary: Speech rate was ${metrics.speechRate} WPM compared to expected ${baseline.avgSpeechRateWPM} WPM. ${metrics.fillerCount} filler words and ${metrics.stammerCount} repetitions were detected.\n\nRecommendation: Human review suggested`;
+                // Fallback
+                aiSummary.textContent = `Friction Level: ${friction.level}\n\nSpeech rate: ${metrics.speechRate} WPM. Detected ${metrics.fillerCount} fillers, ${metrics.hesitationCount} hesitations, and ${metrics.lagCount} speech lags.`;
             }
+        }
+
+        // ============================================
+        // EXPORT FOR COMBINED ANALYSIS
+        // ============================================
+
+        function exportData() {
+            const exportObj = {
+                type: 'speech',
+                timestamp: new Date().toISOString(),
+                duration: metrics.totalTime,
+                metrics: {
+                    wordCount: metrics.wordCount,
+                    speechRate: metrics.speechRate,
+                    fillerCount: metrics.fillerCount,
+                    hesitationCount: metrics.hesitationCount,
+                    pauseCount: metrics.pauseCount,
+                    lagCount: metrics.lagCount,
+                },
+                friction: calculateFriction(AGE_BASELINES[document.getElementById('ageSelect').value]),
+                detections: metrics.detections,
+                transcript: finalTranscript.replace(/<[^>]*>/g, '') // Strip HTML
+            };
+
+            // Store in localStorage for combined analysis
+            localStorage.setItem('adhara_speech_data', JSON.stringify(exportObj));
+
+            // Also download as JSON
+            const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `adhara-speech-${Date.now()}.json`;
+            a.click();
+
+            alert('Speech data exported! Ready for combined analysis.');
         }
 
         // Initialize

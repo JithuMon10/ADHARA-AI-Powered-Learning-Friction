@@ -1011,21 +1011,22 @@
             const gazeStability = document.getElementById('gazeStability').textContent;
             const recentAlerts = alerts.slice(0, 3).map(a => a.type);
 
-            const prompt = `You are an educational AI analyzing a student's emotional state during a learning session. Provide a brief, realistic assessment.
+            const prompt = `You are ADHARA, an AI helping educators detect learning friction. Analyze this student's facial expressions and eye behavior during a learning task.
 
-Current State:
-- Dominant Expression: ${dominant} (${(confidence * 100).toFixed(0)}% confidence)
-- All Expressions: ${sorted.map(([e, c]) => `${e}: ${(c * 100).toFixed(0)}%`).join(', ')}
-- Blink Rate: ${blinkRate}/min (normal: 15-20/min)
+Student Observation Data:
+- Primary Expression: ${dominant} (${(confidence * 100).toFixed(0)}% confidence)
+- Expression Breakdown: ${sorted.slice(0, 3).map(([e, c]) => `${e}: ${(c * 100).toFixed(0)}%`).join(', ')}
+- Blink Rate: ${blinkRate}/min (15-20 is normal; high may indicate stress)
 - Gaze Stability: ${gazeStability}
-- Recent Emotion Trend: ${recentEmotions.slice(-5).join(' → ') || 'stable'}
-- Recent Alerts: ${recentAlerts.length > 0 ? recentAlerts.join(', ') : 'none'}
+- Recent Pattern: ${recentEmotions.slice(-5).join(' → ') || 'consistent'}
+- Alerts Triggered: ${recentAlerts.length > 0 ? recentAlerts.join(', ') : 'none'}
 
-Instructions:
-1. Describe the student's likely emotional/cognitive state in 2 sentences
-2. Suggest one actionable recommendation for a teacher
-3. Be realistic - acknowledge detection limitations
-4. Keep response under 80 words`;
+Provide for the teacher:
+1. A 1-sentence summary of the student's apparent engagement/emotional state
+2. One specific, actionable suggestion (e.g., "may benefit from a short break")
+
+Do NOT diagnose. Use cautious language like "may suggest" or "appears to show".
+Keep response under 60 words.`;
 
             try {
                 const res = await fetch(`${OLLAMA_URL}/api/generate`, {

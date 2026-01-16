@@ -699,9 +699,9 @@
                         // Micro-tremor detection (analyze small movements)
                         this.detectMicroTremor(sample);
 
-                        // Hesitation detection
-                        if (distance < 2) {
-                            if (now - this.lastSignificantMove > this.hesitationThreshold) {
+                        // Hesitation detection (less sensitive - ignore very small pauses)
+                        if (distance < 1) {
+                            if (now - this.lastSignificantMove > this.hesitationThreshold * 1.5) {
                                 this.metrics.microPauses++;
                             }
                         } else {
@@ -763,7 +763,7 @@
                         }
                     }
 
-                    const tremorValue = (Math.sqrt(variance) * 0.5) + (dirOscillation * 0.1);
+                    const tremorValue = (Math.sqrt(variance) * 0.3) + (dirOscillation * 0.05);
                     this.tremorValues.push(tremorValue);
                 }
             }
@@ -801,7 +801,7 @@
                 // Velocity variance (normalized)
                 const avgV = this.metrics.avgVelocity;
                 const velVariance = recent.map(v => Math.pow(v - avgV, 2)).reduce((a, b) => a + b, 0) / recent.length;
-                this.metrics.velocityVariance = Math.min(Math.sqrt(velVariance) / 500, 1);
+                this.metrics.velocityVariance = Math.min(Math.sqrt(velVariance) / 800, 1);
 
                 // Average acceleration magnitude
                 const absAcc = recentAcc.map(Math.abs);
@@ -815,8 +815,8 @@
                     );
                 }
 
-                // Micro-jitter (high-frequency direction oscillation)
-                this.metrics.microJitter = Math.min(this.metrics.directionChanges / Math.max(this.samples.length / 10, 1), 1);
+                // Micro-jitter (high-frequency direction oscillation) - less sensitive
+                this.metrics.microJitter = Math.min(this.metrics.directionChanges / Math.max(this.samples.length / 5, 1), 1) * 0.5;
 
                 // Smoothness (inverse of acceleration variance)
                 if (absAcc.length > 5) {
@@ -859,8 +859,8 @@
                     (1 - this.metrics.smoothness) * 0.1
                 );
 
-                if (score < 0.15) return { level: 'STABLE', class: 'low' };
-                if (score < 0.35) return { level: 'MODERATE', class: 'medium' };
+                if (score < 0.25) return { level: 'STABLE', class: 'low' };
+                if (score < 0.50) return { level: 'MODERATE', class: 'medium' };
                 return { level: 'ELEVATED', class: 'high' };
             }
 
@@ -1036,27 +1036,25 @@
             statusDot.className = 'ai-status-dot thinking';
             statusText.textContent = 'Analyzing...';
 
-            const prompt = `You are an AI analyzing mouse movement data for learning friction detection. Analyze these metrics and determine if the mouse movement shows signs of tremor, anxiety, uncertainty, or normal controlled movement.
+            const prompt = `You are ADHARA, an AI assistant helping educators detect learning friction in students. Analyze these mouse movement metrics and assess if the student may be experiencing difficulty or stress during a learning task.
 
-Current Metrics:
-- Tremor Index: ${metrics.tremorIndex.toFixed(3)} (0-1 scale, higher = more tremor)
-- Micro-Jitter: ${metrics.microJitter.toFixed(3)} (0-1 scale, higher = more jitter)
-- Velocity Variance: ${metrics.velocityVariance.toFixed(3)} (0-1 scale, higher = more erratic)
-- Acceleration: ${metrics.avgAcceleration.toFixed(3)} (0-1 scale)
+Mouse Movement Metrics:
+- Tremor Index: ${metrics.tremorIndex.toFixed(3)} (higher = more hand tremor)
+- Micro-Jitter: ${metrics.microJitter.toFixed(3)} (higher = less control)
+- Velocity Variance: ${metrics.velocityVariance.toFixed(3)} (higher = erratic speed)
+- Smoothness Score: ${metrics.smoothness.toFixed(3)} (1.0 = perfectly smooth)
+- Path Efficiency: ${(metrics.pathEfficiency * 100).toFixed(1)}% (100% = direct path)
+- Hesitation Count: ${metrics.microPauses} micro-pauses detected
 - Direction Changes: ${metrics.directionChanges}
-- Smoothness: ${metrics.smoothness.toFixed(3)} (0-1 scale, higher = smoother)
-- Curvature: ${metrics.curvature.toFixed(3)} (0-1 scale)
-- Path Efficiency: ${(metrics.pathEfficiency * 100).toFixed(1)}%
-- Micro-Pauses: ${metrics.microPauses}
 - Current Friction Level: ${frictionLevel}
 
-Provide a brief 2-3 sentence analysis. Then on a new line, give your verdict in exactly this format:
-VERDICT: [NORMAL/UNCERTAIN/ABNORMAL]
+Provide a 2-sentence analysis suitable for a teacher, focusing on:
+1. Whether the movement suggests the student is comfortable or struggling
+2. One specific actionable observation
 
-Be concise and focus on whether the movement patterns suggest:
-1. Normal controlled movement
-2. Signs of uncertainty or hesitation
-3. Abnormal tremor or anxiety-like patterns`;
+Do NOT diagnose or label the student. Use phrases like "may indicate" or "suggests".
+
+End with exactly: VERDICT: [NORMAL/UNCERTAIN/ABNORMAL]`;
 
             try {
                 const response = await fetch(`${OLLAMA_URL}/api/generate`, {

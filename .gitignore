@@ -75,3 +75,12 @@ coverage/
 
 # Local Netlify folder
 .netlify/
+
+# Presentation files (generated locally)
+*.pptx
+create_pptx.py
+presentation-phase2.html
+
+# Python cache
+__pycache__/
+*.pyc
