@@ -7,8 +7,8 @@ import './TeacherDashboard.css'
  * Shows friction signals, patterns, and recommendations
  */
 
-const OLLAMA_URL = 'http://localhost:11434'
-const MODEL = 'qwen2.5-coder:7b-instruct-q4_K_M'
+const OLLAMA_URL = import.meta.env.VITE_OLLAMA_URL || 'http://localhost:11434'
+const MODEL = import.meta.env.VITE_OLLAMA_MODEL || 'qwen2.5-coder:7b'
 
 function TeacherDashboard() {
     const navigate = useNavigate()
