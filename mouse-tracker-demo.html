@@ -273,6 +273,100 @@
             background: linear-gradient(90deg, #10b981, #06b6d4);
             transition: width 0.3s;
         }
+
+        /* AI Summary Panel */
+        .ai-panel {
+            margin-top: 16px;
+            border: 2px solid #8b5cf6;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1));
+        }
+
+        .ai-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .ai-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .ai-status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #64748b;
+        }
+
+        .ai-status-dot.connected {
+            background: #10b981;
+        }
+
+        .ai-status-dot.thinking {
+            background: #f59e0b;
+            animation: pulse 1s infinite;
+        }
+
+        .ai-status-dot.error {
+            background: #ef4444;
+        }
+
+        .ai-summary {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            color: #e2e8f0;
+        }
+
+        .ai-summary.loading {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .ai-verdict {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .ai-verdict.normal {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid #10b981;
+            color: #34d399;
+        }
+
+        .ai-verdict.uncertain {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbbf24;
+        }
+
+        .ai-verdict.abnormal {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            color: #f87171;
+        }
+
+        .model-select {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid rgba(71, 85, 105, 0.5);
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #e2e8f0;
+            font-size: 0.75rem;
+        }
     </style>
 </head>
 
@@ -315,6 +409,32 @@
                 <div class="card" style="margin-top: 12px;">
                     <div class="card-title">📝 Raw Data Stream</div>
                     <div class="raw-data" id="rawData">Waiting for data...</div>
+                </div>
+
+                <!-- AI Summary Panel -->
+                <div class="card ai-panel" style="margin-top: 12px;">
+                    <div class="ai-header">
+                        <div class="card-title" style="margin-bottom: 0;">🤖 AI Live Analysis (Qwen)</div>
+                        <div class="ai-status">
+                            <span class="ai-status-dot" id="aiStatusDot"></span>
+                            <span id="aiStatusText">Disconnected</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px; font-size: 0.75rem;">
+                        <span style="color: #94a3b8;">Model:</span>
+                        <select class="model-select" id="modelSelect">
+                            <option value="qwen2.5-coder:7b-instruct-q4_K_M">qwen2.5-coder:7b-instruct</option>
+                            <option value="qwen2.5-coder:7b">qwen2.5-coder:7b</option>
+                            <option value="jaahas/qwen3-abliterated:8b">qwen3-abliterated:8b</option>
+                        </select>
+                        <button class="btn" style="flex: 0; padding: 4px 12px; font-size: 0.7rem;"
+                            onclick="testOllamaConnection()">Test Connection</button>
+                    </div>
+                    <div class="ai-summary" id="aiSummary">Start tracking to receive AI analysis of your mouse behavior
+                        patterns...</div>
+                    <div class="ai-verdict normal" id="aiVerdict" style="display: none;">
+                        <span id="aiVerdictText">Normal Movement</span>
+                    </div>
                 </div>
             </div>
 
@@ -866,6 +986,145 @@
         });
 
         // ============================================
+        // OLLAMA AI INTEGRATION
+        // ============================================
+
+        const OLLAMA_URL = 'http://localhost:11434';
+        let aiAnalysisInterval = null;
+        let isAiConnected = false;
+        let lastAiAnalysis = '';
+
+        async function testOllamaConnection() {
+            const statusDot = document.getElementById('aiStatusDot');
+            const statusText = document.getElementById('aiStatusText');
+            const aiSummary = document.getElementById('aiSummary');
+
+            statusDot.className = 'ai-status-dot thinking';
+            statusText.textContent = 'Connecting...';
+
+            try {
+                const response = await fetch(`${OLLAMA_URL}/api/tags`);
+                if (response.ok) {
+                    const data = await response.json();
+                    isAiConnected = true;
+                    statusDot.className = 'ai-status-dot connected';
+                    statusText.textContent = 'Connected';
+                    aiSummary.textContent = `✅ Connected to Ollama! Found ${data.models?.length || 0} models. Start tracking to receive AI analysis.`;
+                    aiSummary.className = 'ai-summary';
+                } else {
+                    throw new Error('Failed to connect');
+                }
+            } catch (error) {
+                isAiConnected = false;
+                statusDot.className = 'ai-status-dot error';
+                statusText.textContent = 'Error';
+                aiSummary.textContent = `❌ Cannot connect to Ollama at ${OLLAMA_URL}. Make sure Ollama is running (ollama serve).`;
+                aiSummary.className = 'ai-summary';
+            }
+        }
+
+        async function analyzeWithAI(metrics, frictionLevel) {
+            if (!isAiConnected) return;
+
+            const model = document.getElementById('modelSelect').value;
+            const statusDot = document.getElementById('aiStatusDot');
+            const statusText = document.getElementById('aiStatusText');
+            const aiSummary = document.getElementById('aiSummary');
+            const aiVerdict = document.getElementById('aiVerdict');
+            const aiVerdictText = document.getElementById('aiVerdictText');
+
+            statusDot.className = 'ai-status-dot thinking';
+            statusText.textContent = 'Analyzing...';
+
+            const prompt = `You are an AI analyzing mouse movement data for learning friction detection. Analyze these metrics and determine if the mouse movement shows signs of tremor, anxiety, uncertainty, or normal controlled movement.
+
+Current Metrics:
+- Tremor Index: ${metrics.tremorIndex.toFixed(3)} (0-1 scale, higher = more tremor)
+- Micro-Jitter: ${metrics.microJitter.toFixed(3)} (0-1 scale, higher = more jitter)
+- Velocity Variance: ${metrics.velocityVariance.toFixed(3)} (0-1 scale, higher = more erratic)
+- Acceleration: ${metrics.avgAcceleration.toFixed(3)} (0-1 scale)
+- Direction Changes: ${metrics.directionChanges}
+- Smoothness: ${metrics.smoothness.toFixed(3)} (0-1 scale, higher = smoother)
+- Curvature: ${metrics.curvature.toFixed(3)} (0-1 scale)
+- Path Efficiency: ${(metrics.pathEfficiency * 100).toFixed(1)}%
+- Micro-Pauses: ${metrics.microPauses}
+- Current Friction Level: ${frictionLevel}
+
+Provide a brief 2-3 sentence analysis. Then on a new line, give your verdict in exactly this format:
+VERDICT: [NORMAL/UNCERTAIN/ABNORMAL]
+
+Be concise and focus on whether the movement patterns suggest:
+1. Normal controlled movement
+2. Signs of uncertainty or hesitation
+3. Abnormal tremor or anxiety-like patterns`;
+
+            try {
+                const response = await fetch(`${OLLAMA_URL}/api/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: model,
+                        prompt: prompt,
+                        stream: false,
+                        options: {
+                            temperature: 0.3,
+                            num_predict: 150
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const aiResponse = data.response || 'No response';
+                    lastAiAnalysis = aiResponse;
+
+                    // Parse verdict
+                    let verdict = 'NORMAL';
+                    if (aiResponse.includes('VERDICT: ABNORMAL')) verdict = 'ABNORMAL';
+                    else if (aiResponse.includes('VERDICT: UNCERTAIN')) verdict = 'UNCERTAIN';
+                    else if (aiResponse.includes('VERDICT: NORMAL')) verdict = 'NORMAL';
+
+                    // Update UI
+                    aiSummary.textContent = aiResponse.replace(/VERDICT:.*$/i, '').trim();
+                    aiSummary.className = 'ai-summary';
+
+                    aiVerdict.style.display = 'block';
+                    aiVerdict.className = `ai-verdict ${verdict.toLowerCase()}`;
+                    aiVerdictText.textContent = verdict === 'NORMAL' ? '✅ Normal Movement' :
+                        verdict === 'UNCERTAIN' ? '⚠️ Signs of Uncertainty' :
+                            '🚨 Abnormal Pattern Detected';
+
+                    statusDot.className = 'ai-status-dot connected';
+                    statusText.textContent = 'Connected';
+                } else {
+                    throw new Error('API error');
+                }
+            } catch (error) {
+                console.error('AI analysis error:', error);
+                aiSummary.textContent = '⚠️ Error getting AI analysis. Will retry...';
+                statusDot.className = 'ai-status-dot error';
+                statusText.textContent = 'Error';
+            }
+        }
+
+        function startAiAnalysis() {
+            // Run AI analysis every 5 seconds during tracking
+            aiAnalysisInterval = setInterval(() => {
+                if (tracker.isTracking && tracker.samples.length > 50) {
+                    const data = tracker.getData();
+                    analyzeWithAI(data.metrics, data.friction.level);
+                }
+            }, 5000);
+        }
+
+        function stopAiAnalysis() {
+            if (aiAnalysisInterval) {
+                clearInterval(aiAnalysisInterval);
+                aiAnalysisInterval = null;
+            }
+        }
+
+        // ============================================
         // INITIALIZATION
         // ============================================
 
@@ -873,6 +1132,9 @@
         const tracker = new AdvancedMouseTracker(canvas);
 
         let updateInterval;
+
+        // Test Ollama connection on page load
+        setTimeout(testOllamaConnection, 1000);
 
         function updateUI() {
             const data = tracker.getData();
@@ -954,6 +1216,10 @@
             document.getElementById('startBtn').disabled = true;
             document.getElementById('stopBtn').disabled = false;
             updateInterval = setInterval(updateUI, 100);
+            startAiAnalysis();
+            document.getElementById('aiSummary').textContent = '🔄 Collecting data... AI analysis will begin shortly.';
+            document.getElementById('aiSummary').className = 'ai-summary loading';
+            document.getElementById('aiVerdict').style.display = 'none';
         });
 
         document.getElementById('stopBtn').addEventListener('click', () => {
@@ -961,7 +1227,13 @@
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
             clearInterval(updateInterval);
+            stopAiAnalysis();
             updateUI();
+            // Run final AI analysis
+            if (tracker.samples.length > 10) {
+                const data = tracker.getData();
+                analyzeWithAI(data.metrics, data.friction.level);
+            }
         });
 
         document.getElementById('resetBtn').addEventListener('click', () => {
