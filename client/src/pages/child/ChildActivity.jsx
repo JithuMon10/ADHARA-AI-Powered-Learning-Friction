@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { loadFaceModels, analyzeFace, FaceAnalysisSession } from '../../utils/faceAnalysis'
 import './ChildActivity.css'
 
 /**
  * Child Activity - Interactive activities with FULL TRACKING
- * Tracks: Mouse, Face (webcam), Voice, Response times
+ * Enhanced: Speech Analysis + Face/Emotion Detection
  */
 
 // Extended activities with more types
@@ -96,11 +97,32 @@ const MASCOT_MESSAGES = {
     complete: ["All done! You're a superstar! ⭐🌟⭐"]
 }
 
+// Filler words and stammers to detect
+const FILLER_PATTERNS = ['um', 'uh', 'uhh', 'umm', 'er', 'err', 'ah', 'ahh', 'like', 'you know', 'well', 'so']
+const STAMMER_PATTERN = /\b(\w)\1+(?:\s+\1+)*\b|\b(\w+)\s+\2\b/gi // Detects "b-b-ball" or "the the"
+
 function ChildActivity() {
     const navigate = useNavigate()
     const canvasRef = useRef(null)
     const videoRef = useRef(null)
     const streamRef = useRef(null)
+
+    // Enhanced speech tracking refs
+    const speechAnalysisRef = useRef({
+        isRecording: false,
+        sessionStartTime: null,
+        wordTimestamps: [],
+        fillerWords: [],
+        stammers: [],
+        pauses: [],
+        totalWordsSpoken: 0,
+        lastWordTime: null,
+        continuousTranscript: '',
+        speechSegments: [],
+        silenceStartTime: null,
+        totalSpeakingTime: 0,
+        totalSilenceTime: 0
+    })
 
     // Tracking refs (persist across renders)
     const signalsRef = useRef({
@@ -112,7 +134,20 @@ function ChildActivity() {
         startTime: Date.now(),
         faceData: [],
         voiceData: [],
-        stressIndicators: []
+        stressIndicators: [],
+        // Enhanced speech metrics
+        speechAnalysis: {
+            speechRateWPM: 0,
+            avgPauseDurationMs: 0,
+            fillerWordCount: 0,
+            stammerCount: 0,
+            silenceRatio: 0,
+            selfCorrections: 0,
+            wordTimestamps: [],
+            detectedFillers: [],
+            detectedStammers: [],
+            pauseDetails: []
+        }
     })
 
     const [currentIndex, setCurrentIndex] = useState(0)
@@ -124,13 +159,20 @@ function ChildActivity() {
     const [childData, setChildData] = useState(null)
     const [activityStartTime, setActivityStartTime] = useState(Date.now())
 
-    // Face tracking
+    // Face tracking with emotion detection
     const [cameraEnabled, setCameraEnabled] = useState(false)
     const [cameraError, setCameraError] = useState(null)
+    const [faceModelsLoaded, setFaceModelsLoaded] = useState(false)
+    const [currentEmotion, setCurrentEmotion] = useState('loading...')
+    const [faceStats, setFaceStats] = useState({ blinks: 0, gazeOnScreen: 0, emotion: 'neutral' })
+    const faceAnalysisSessionRef = useRef(new FaceAnalysisSession())
+    const faceTrackingIntervalRef = useRef(null)
 
     // Voice tracking  
     const [isListening, setIsListening] = useState(false)
     const [voiceResult, setVoiceResult] = useState('')
+    const [isContinuousRecording, setIsContinuousRecording] = useState(false)
+    const [speechStats, setSpeechStats] = useState({ words: 0, fillers: 0, pauses: 0 })
     const recognitionRef = useRef(null)
 
     // Sequence activity state
@@ -151,91 +193,455 @@ function ChildActivity() {
         // Initialize camera
         initCamera()
 
-        // Initialize speech recognition
-        initSpeechRecognition()
+        // Initialize enhanced speech recognition (continuous)
+        initEnhancedSpeechRecognition()
 
         return () => {
-            // Cleanup camera
             if (streamRef.current) {
                 streamRef.current.getTracks().forEach(track => track.stop())
             }
-            // Cleanup speech
-            if (recognitionRef.current) {
-                recognitionRef.current.stop()
+            if (faceTrackingIntervalRef.current) {
+                clearInterval(faceTrackingIntervalRef.current)
             }
+            stopContinuousRecording()
         }
     }, [])
 
-    // Initialize camera for face tracking
+    // Initialize camera and face-api.js models
     const initCamera = async () => {
         try {
+            // Load face-api.js models first
+            setCurrentEmotion('Loading AI...')
+            const modelsLoaded = await loadFaceModels()
+            setFaceModelsLoaded(modelsLoaded)
+
+            // Get camera stream
             const stream = await navigator.mediaDevices.getUserMedia({
                 video: { width: 320, height: 240, facingMode: 'user' }
             })
             streamRef.current = stream
             if (videoRef.current) {
                 videoRef.current.srcObject = stream
+                // Wait for video to be ready
+                videoRef.current.onloadedmetadata = () => {
+                    videoRef.current.play()
+                    if (modelsLoaded) {
+                        startAdvancedFaceTracking()
+                    } else {
+                        startBasicFaceTracking()
+                    }
+                }
             }
             setCameraEnabled(true)
-
-            // Start face detection interval
-            startFaceTracking()
+            setCurrentEmotion('Ready')
         } catch (err) {
             console.log('Camera not available:', err.message)
             setCameraError('Camera not available')
+            setCurrentEmotion('No camera')
         }
     }
 
-    // Face tracking loop (simple presence detection)
-    const startFaceTracking = () => {
-        const trackFace = setInterval(() => {
+    // Advanced face tracking with emotion detection
+    const startAdvancedFaceTracking = () => {
+        faceAnalysisSessionRef.current.reset()
+
+        faceTrackingIntervalRef.current = setInterval(async () => {
+            if (!videoRef.current || !cameraEnabled || !faceModelsLoaded) return
+
+            try {
+                const analysis = await analyzeFace(videoRef.current)
+
+                if (analysis) {
+                    faceAnalysisSessionRef.current.addSample(analysis)
+
+                    if (analysis.faceDetected) {
+                        // Update current emotion
+                        setCurrentEmotion(analysis.emotions.dominant)
+
+                        // Update stats display
+                        const summary = faceAnalysisSessionRef.current.getSummary()
+                        setFaceStats({
+                            blinks: summary.blinkCount,
+                            gazeOnScreen: summary.gazeOnScreenPercent,
+                            emotion: analysis.emotions.dominant
+                        })
+
+                        // Store detailed face data
+                        signalsRef.current.faceData.push({
+                            timestamp: analysis.timestamp,
+                            present: true,
+                            activity: ACTIVITIES[currentIndex]?.type,
+                            emotion: analysis.emotions.dominant,
+                            emotionConfidence: analysis.emotions.confidence,
+                            allEmotions: analysis.emotions.all,
+                            isBlinking: analysis.blink.isBlinking,
+                            eyeAspectRatio: analysis.blink.avgEAR,
+                            headPose: analysis.headPose,
+                            gaze: analysis.gaze,
+                            isLookingAtScreen: analysis.gaze.isLookingAtScreen
+                        })
+
+                        // Detect stress indicators from face
+                        if (['angry', 'fearful', 'sad', 'disgusted'].includes(analysis.emotions.dominant) &&
+                            analysis.emotions.confidence > 0.5) {
+                            signalsRef.current.stressIndicators.push({
+                                type: 'negative_emotion',
+                                emotion: analysis.emotions.dominant,
+                                confidence: analysis.emotions.confidence,
+                                timestamp: Date.now(),
+                                activity: ACTIVITIES[currentIndex]?.id
+                            })
+                        }
+
+                        // Detect looking away (attention drift)
+                        if (!analysis.gaze.isLookingAtScreen) {
+                            signalsRef.current.stressIndicators.push({
+                                type: 'looking_away',
+                                gazeOffset: { x: analysis.gaze.offsetX, y: analysis.gaze.offsetY },
+                                timestamp: Date.now(),
+                                activity: ACTIVITIES[currentIndex]?.id
+                            })
+                        }
+                    } else {
+                        setCurrentEmotion('No face')
+                        signalsRef.current.faceData.push({
+                            timestamp: Date.now(),
+                            present: false,
+                            activity: ACTIVITIES[currentIndex]?.type
+                        })
+                    }
+                }
+            } catch (err) {
+                console.log('Face analysis error:', err)
+            }
+        }, 1000) // Analyze every 1 second
+    }
+
+    // Basic face tracking fallback (no models)
+    const startBasicFaceTracking = () => {
+        setInterval(() => {
             if (videoRef.current && cameraEnabled) {
-                // Log face presence periodically
                 signalsRef.current.faceData.push({
                     timestamp: Date.now(),
-                    present: true, // In production, use face-api.js
+                    present: true,
                     activity: ACTIVITIES[currentIndex]?.type
                 })
             }
-        }, 3000) // Every 3 seconds
-
-        return () => clearInterval(trackFace)
+        }, 3000)
     }
 
-    // Initialize speech recognition
-    const initSpeechRecognition = () => {
+    // ========== ENHANCED SPEECH RECOGNITION ==========
+
+    // Detect fillers in text
+    const detectFillers = (text) => {
+        const lowerText = text.toLowerCase()
+        const found = []
+        FILLER_PATTERNS.forEach(filler => {
+            const regex = new RegExp(`\\b${filler}\\b`, 'gi')
+            const matches = lowerText.match(regex)
+            if (matches) {
+                matches.forEach(() => {
+                    found.push({
+                        word: filler,
+                        timestamp: Date.now(),
+                        activity: ACTIVITIES[currentIndex]?.id
+                    })
+                })
+            }
+        })
+        return found
+    }
+
+    // Detect stammers in text
+    const detectStammers = (text) => {
+        const found = []
+        const matches = text.match(STAMMER_PATTERN)
+        if (matches) {
+            matches.forEach(match => {
+                found.push({
+                    pattern: match,
+                    timestamp: Date.now(),
+                    activity: ACTIVITIES[currentIndex]?.id
+                })
+            })
+        }
+        // Also detect repeated syllables like "ba-ba-ball"
+        const syllableRepeat = text.match(/\b(\w{1,3})-\1+/gi)
+        if (syllableRepeat) {
+            syllableRepeat.forEach(match => {
+                found.push({
+                    pattern: match,
+                    type: 'syllable_repeat',
+                    timestamp: Date.now(),
+                    activity: ACTIVITIES[currentIndex]?.id
+                })
+            })
+        }
+        return found
+    }
+
+    // Detect self-corrections
+    const detectSelfCorrections = (text) => {
+        const patterns = [
+            /\b(I mean|wait|no|actually|sorry|I meant)\b/gi,
+            /\b(\w+)\s+no\s+(\w+)\b/gi // "red no blue"
+        ]
+        let count = 0
+        patterns.forEach(pattern => {
+            const matches = text.match(pattern)
+            if (matches) count += matches.length
+        })
+        return count
+    }
+
+    // Process speech segment
+    const processSpeechSegment = (transcript, confidence, isFinal) => {
+        const now = Date.now()
+        const speechRef = speechAnalysisRef.current
+
+        if (!speechRef.sessionStartTime) {
+            speechRef.sessionStartTime = now
+        }
+
+        // Calculate pause duration since last word
+        if (speechRef.lastWordTime) {
+            const pauseDuration = now - speechRef.lastWordTime
+            if (pauseDuration > 500) { // Pause > 500ms is significant
+                speechRef.pauses.push({
+                    durationMs: pauseDuration,
+                    timestamp: now,
+                    activity: ACTIVITIES[currentIndex]?.id,
+                    beforeText: transcript.substring(0, 30)
+                })
+                signalsRef.current.speechAnalysis.pauseDetails.push({
+                    durationMs: pauseDuration,
+                    timestamp: now
+                })
+            }
+        }
+
+        // Count words
+        const words = transcript.trim().split(/\s+/).filter(w => w.length > 0)
+        const wordCount = words.length
+
+        // Record word timestamps
+        words.forEach((word, i) => {
+            speechRef.wordTimestamps.push({
+                word: word.toLowerCase(),
+                timestamp: now + (i * 100), // Approximate timing
+                confidence
+            })
+        })
+
+        // Detect fillers
+        const fillers = detectFillers(transcript)
+        if (fillers.length > 0) {
+            speechRef.fillerWords.push(...fillers)
+            signalsRef.current.speechAnalysis.detectedFillers.push(...fillers)
+            signalsRef.current.speechAnalysis.fillerWordCount += fillers.length
+        }
+
+        // Detect stammers
+        const stammers = detectStammers(transcript)
+        if (stammers.length > 0) {
+            speechRef.stammers.push(...stammers)
+            signalsRef.current.speechAnalysis.detectedStammers.push(...stammers)
+            signalsRef.current.speechAnalysis.stammerCount += stammers.length
+        }
+
+        // Detect self-corrections
+        const corrections = detectSelfCorrections(transcript)
+        signalsRef.current.speechAnalysis.selfCorrections += corrections
+
+        // Update counts
+        speechRef.totalWordsSpoken += wordCount
+        speechRef.lastWordTime = now
+        speechRef.continuousTranscript += ' ' + transcript
+
+        // Calculate running stats
+        const sessionDuration = (now - speechRef.sessionStartTime) / 1000 / 60 // minutes
+        if (sessionDuration > 0) {
+            signalsRef.current.speechAnalysis.speechRateWPM = Math.round(speechRef.totalWordsSpoken / sessionDuration)
+        }
+
+        // Average pause duration
+        if (speechRef.pauses.length > 0) {
+            const avgPause = speechRef.pauses.reduce((sum, p) => sum + p.durationMs, 0) / speechRef.pauses.length
+            signalsRef.current.speechAnalysis.avgPauseDurationMs = Math.round(avgPause)
+        }
+
+        // Update UI stats
+        setSpeechStats({
+            words: speechRef.totalWordsSpoken,
+            fillers: signalsRef.current.speechAnalysis.fillerWordCount,
+            pauses: speechRef.pauses.length
+        })
+
+        // Record segment if final
+        if (isFinal) {
+            speechRef.speechSegments.push({
+                transcript,
+                confidence,
+                timestamp: now,
+                wordCount,
+                fillersFound: fillers.length,
+                stammersFound: stammers.length,
+                activity: ACTIVITIES[currentIndex]?.id
+            })
+
+            signalsRef.current.voiceData.push({
+                timestamp: now,
+                transcript,
+                confidence,
+                activity: ACTIVITIES[currentIndex]?.type,
+                analysis: {
+                    wordCount,
+                    fillers: fillers.length,
+                    stammers: stammers.length,
+                    pausesBefore: speechRef.pauses.length > 0 ? speechRef.pauses[speechRef.pauses.length - 1].durationMs : 0
+                }
+            })
+        }
+    }
+
+    // Initialize enhanced speech recognition with continuous mode
+    const initEnhancedSpeechRecognition = () => {
         if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
             const recognition = new SpeechRecognition()
-            recognition.continuous = false
+
+            // Enable continuous listening
+            recognition.continuous = true
             recognition.interimResults = true
             recognition.lang = 'en-US'
+            recognition.maxAlternatives = 1
 
             recognition.onresult = (event) => {
-                const transcript = Array.from(event.results)
-                    .map(result => result[0].transcript)
-                    .join('')
-                setVoiceResult(transcript)
+                let interimTranscript = ''
+                let finalTranscript = ''
 
-                // Record voice data
-                signalsRef.current.voiceData.push({
-                    timestamp: Date.now(),
-                    transcript,
-                    confidence: event.results[0]?.[0]?.confidence || 0,
-                    activity: ACTIVITIES[currentIndex]?.type
-                })
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i]
+                    const transcript = result[0].transcript
+                    const confidence = result[0].confidence || 0
+
+                    if (result.isFinal) {
+                        finalTranscript += transcript
+                        processSpeechSegment(transcript, confidence, true)
+                    } else {
+                        interimTranscript += transcript
+                        // Process interim for real-time analysis
+                        processSpeechSegment(transcript, confidence, false)
+                    }
+                }
+
+                setVoiceResult(finalTranscript || interimTranscript)
             }
 
             recognition.onend = () => {
-                setIsListening(false)
+                // Auto-restart if continuous recording is enabled
+                if (isContinuousRecording && recognitionRef.current) {
+                    try {
+                        recognition.start()
+                    } catch (e) {
+                        console.log('Speech restart error:', e)
+                    }
+                } else {
+                    setIsListening(false)
+                }
             }
 
             recognition.onerror = (event) => {
                 console.log('Speech error:', event.error)
-                setIsListening(false)
+                if (event.error === 'no-speech' && isContinuousRecording) {
+                    // Track silence
+                    if (!speechAnalysisRef.current.silenceStartTime) {
+                        speechAnalysisRef.current.silenceStartTime = Date.now()
+                    }
+                } else if (event.error !== 'aborted') {
+                    setIsListening(false)
+                }
+            }
+
+            recognition.onspeechend = () => {
+                // Track silence periods
+                const speechRef = speechAnalysisRef.current
+                if (speechRef.lastWordTime) {
+                    speechRef.silenceStartTime = Date.now()
+                }
+            }
+
+            recognition.onspeechstart = () => {
+                // Calculate silence duration if we were silent
+                const speechRef = speechAnalysisRef.current
+                if (speechRef.silenceStartTime) {
+                    const silenceDuration = Date.now() - speechRef.silenceStartTime
+                    speechRef.totalSilenceTime += silenceDuration
+                    speechRef.silenceStartTime = null
+                }
             }
 
             recognitionRef.current = recognition
+        }
+    }
+
+    // Start continuous recording
+    const startContinuousRecording = () => {
+        if (recognitionRef.current && !isContinuousRecording) {
+            setIsContinuousRecording(true)
+            setIsListening(true)
+            speechAnalysisRef.current.sessionStartTime = Date.now()
+            speechAnalysisRef.current.isRecording = true
+
+            try {
+                recognitionRef.current.start()
+                console.log('🎤 Continuous recording started')
+            } catch (e) {
+                console.log('Speech start error:', e)
+            }
+        }
+    }
+
+    // Stop continuous recording and calculate final metrics
+    const stopContinuousRecording = () => {
+        if (recognitionRef.current && isContinuousRecording) {
+            setIsContinuousRecording(false)
+            speechAnalysisRef.current.isRecording = false
+
+            try {
+                recognitionRef.current.stop()
+            } catch (e) {
+                console.log('Speech stop error:', e)
+            }
+
+            // Calculate final metrics
+            const speechRef = speechAnalysisRef.current
+            const totalTime = Date.now() - (speechRef.sessionStartTime || Date.now())
+            const speakingTime = totalTime - speechRef.totalSilenceTime
+
+            signalsRef.current.speechAnalysis.silenceRatio = totalTime > 0
+                ? (speechRef.totalSilenceTime / totalTime).toFixed(2)
+                : 0
+            signalsRef.current.speechAnalysis.wordTimestamps = speechRef.wordTimestamps
+
+            console.log('🎤 Recording stopped. Final analysis:', signalsRef.current.speechAnalysis)
+        }
+    }
+
+    // Single verbal activity speech
+    const startListening = () => {
+        if (recognitionRef.current) {
+            setIsListening(true)
+            setVoiceResult('')
+            setMascotMessage(MASCOT_MESSAGES.listening[0])
+
+            // Use single-shot for verbal activities
+            recognitionRef.current.continuous = false
+            try {
+                recognitionRef.current.start()
+            } catch (e) {
+                console.log('Already listening')
+            }
         }
     }
 
@@ -257,7 +663,6 @@ function ChildActivity() {
                 signalsRef.current.mouseMovements++
                 idleStart = now
 
-                // Detect rapid/erratic movements (potential stress)
                 if (timeDelta < 50 && distance > 30) {
                     rapidMoves++
                     if (rapidMoves > 10) {
@@ -273,7 +678,6 @@ function ChildActivity() {
                 }
             }
 
-            // Detect hesitation
             if (now - idleStart > 2000 && distance < 10) {
                 signalsRef.current.hesitationEvents.push({
                     timestamp: new Date().toISOString(),
@@ -361,16 +765,6 @@ function ChildActivity() {
         }
     }
 
-    // Handle verbal activity
-    const startListening = () => {
-        if (recognitionRef.current) {
-            setIsListening(true)
-            setVoiceResult('')
-            setMascotMessage(MASCOT_MESSAGES.listening[0])
-            recognitionRef.current.start()
-        }
-    }
-
     const submitVerbal = () => {
         signalsRef.current.responses.push({
             activityId: currentActivity.id,
@@ -384,7 +778,6 @@ function ChildActivity() {
         setTimeout(goToNext, 1500)
     }
 
-    // Handle sequence activity
     const handleSequenceClick = (num) => {
         if (selectedSequence.includes(num)) return
 
@@ -436,6 +829,17 @@ function ChildActivity() {
             streamRef.current.getTracks().forEach(track => track.stop())
         }
 
+        // Stop face tracking interval
+        if (faceTrackingIntervalRef.current) {
+            clearInterval(faceTrackingIntervalRef.current)
+        }
+
+        // Stop continuous recording and finalize speech analysis
+        stopContinuousRecording()
+
+        // Get face analysis summary
+        const faceAnalysisSummary = faceAnalysisSessionRef.current.getSummary()
+
         const finalSignals = {
             ...signalsRef.current,
             childData,
@@ -452,7 +856,26 @@ function ChildActivity() {
                 hesitationCount: signalsRef.current.hesitationEvents.length,
                 stressIndicatorCount: signalsRef.current.stressIndicators.length,
                 faceDataPoints: signalsRef.current.faceData.length,
-                voiceDataPoints: signalsRef.current.voiceData.length
+                voiceDataPoints: signalsRef.current.voiceData.length,
+                // Enhanced speech summary
+                speechAnalysis: {
+                    ...signalsRef.current.speechAnalysis,
+                    totalWordsSpoken: speechAnalysisRef.current.totalWordsSpoken,
+                    totalPauses: speechAnalysisRef.current.pauses.length,
+                    continuousTranscript: speechAnalysisRef.current.continuousTranscript.trim()
+                },
+                // Enhanced face analysis summary
+                faceAnalysis: {
+                    blinkCount: faceAnalysisSummary.blinkCount,
+                    blinkRatePerMin: faceAnalysisSummary.blinkRatePerMin,
+                    facePresencePercent: faceAnalysisSummary.facePresencePercent,
+                    gazeStability: faceAnalysisSummary.gazeStability,
+                    gazeOnScreenPercent: faceAnalysisSummary.gazeOnScreenPercent,
+                    dominantEmotion: faceAnalysisSummary.dominantEmotion,
+                    emotionDistribution: faceAnalysisSummary.emotionDistribution,
+                    stressRatio: faceAnalysisSummary.stressRatio,
+                    recentEmotions: faceAnalysisSummary.recentEmotions
+                }
             }
         }
 
@@ -462,7 +885,10 @@ function ChildActivity() {
         history.push(finalSignals)
         localStorage.setItem('adhara_sessions_history', JSON.stringify(history))
 
-        console.log('Session saved:', finalSignals)
+        console.log('Session saved with face + speech analysis:', {
+            speech: finalSignals.summary.speechAnalysis,
+            face: finalSignals.summary.faceAnalysis
+        })
 
         setTimeout(() => navigate('/play/complete'), 2000)
     }, [childData, navigate])
@@ -526,7 +952,7 @@ function ChildActivity() {
 
     return (
         <div className="child-activity">
-            {/* Camera preview (small, in corner) */}
+            {/* Camera preview */}
             {cameraEnabled && (
                 <div className="camera-preview">
                     <video ref={videoRef} autoPlay muted playsInline />
@@ -534,11 +960,23 @@ function ChildActivity() {
                 </div>
             )}
 
-            {/* Tracking stats */}
+            {/* Enhanced tracking stats */}
             <div className="tracking-indicator">
-                🔴 {signalsRef.current.mouseMovements} moves |
-                {cameraEnabled ? ' 📹 On' : ' 📹 Off'} |
+                🔴 {signalsRef.current.mouseMovements} |
+                {faceModelsLoaded ? ` 😊 ${currentEmotion}` : ' 📹 ' + (cameraEnabled ? 'On' : 'Off')} |
+                👁️ {faceStats.blinks} |
+                🎤 {speechStats.words}w {speechStats.fillers}f |
                 {signalsRef.current.stressIndicators.length > 0 ? ' ⚠️' : ' ✅'}
+            </div>
+
+            {/* Continuous recording toggle */}
+            <div className="recording-controls">
+                <button
+                    className={`record-toggle ${isContinuousRecording ? 'recording' : ''}`}
+                    onClick={isContinuousRecording ? stopContinuousRecording : startContinuousRecording}
+                >
+                    {isContinuousRecording ? '🔴 Stop Recording' : '⚪ Start Voice Recording'}
+                </button>
             </div>
 
             {/* Mascot */}
