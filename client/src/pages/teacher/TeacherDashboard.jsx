@@ -192,8 +192,8 @@ function TeacherDashboard() {
         const { strengths, concerns } = analyzeStrengthsAndConcerns()
 
         const speechAnalysis = summary.speechAnalysis || {}
-
         const faceAnalysis = summary.faceAnalysis || {}
+        const baseline = deviations?.baseline || { label: 'Standard', mouse: { avgHesitationMs: 1800, avgCorrections: 2 } }
 
         const prompt = `You are ADHARA, an AI-powered early learning friction detection system for educational professionals. Generate a comprehensive behavioral analysis report.
 
