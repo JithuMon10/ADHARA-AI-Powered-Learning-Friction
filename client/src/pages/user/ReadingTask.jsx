@@ -276,8 +276,8 @@ function ReadingTask() {
                                             key={oIndex}
                                             onClick={() => handleAnswer(q.id, oIndex)}
                                             className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-all ${answers[q.id] === oIndex
-                                                    ? 'border-primary-500 bg-primary-50 text-primary-900'
-                                                    : 'border-slate-200 hover:border-slate-300 text-slate-700'
+                                                ? 'border-primary-500 bg-primary-50 text-primary-900'
+                                                : 'border-slate-200 hover:border-slate-300 text-slate-700'
                                                 }`}
                                         >
                                             <span className="font-medium mr-2">{String.fromCharCode(65 + oIndex)}.</span>
@@ -303,48 +303,20 @@ function ReadingTask() {
                 </div>
             )}
 
-            {/* Phase: Complete */}
-            {phase === 'complete' && selectedPassage && (
-                <div className="space-y-6">
-                    <div className="card text-center py-8">
-                        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <CheckCircle className="w-8 h-8 text-emerald-600" />
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-900 mb-2">Assessment Complete!</h2>
-                        <p className="text-slate-600">
-                            You scored {getScore()} out of {selectedPassage.questions.length} questions.
-                        </p>
+            {/* Phase: Complete - STUDENT SEES ONLY THIS */}
+            {phase === 'complete' && (
+                <div className="card text-center py-12">
+                    <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CheckCircle className="w-8 h-8 text-emerald-600" />
                     </div>
-
-                    {/* Quick Results Summary */}
-                    {results && (
-                        <div className="card">
-                            <h3 className="font-semibold text-slate-900 mb-4">Interaction Analysis</h3>
-                            <div className="grid grid-cols-2 gap-4 mb-4">
-                                <div className="bg-slate-50 rounded-lg p-4 text-center">
-                                    <div className="text-2xl font-bold text-slate-900 capitalize">{results.frictionLevel}</div>
-                                    <div className="text-sm text-slate-500">Friction Level</div>
-                                </div>
-                                <div className="bg-slate-50 rounded-lg p-4 text-center">
-                                    <div className="text-2xl font-bold text-slate-900">{results.metrics.correctionCount}</div>
-                                    <div className="text-sm text-slate-500">Corrections</div>
-                                </div>
-                            </div>
-                            <p className="text-slate-600 text-sm">{results.explanation.summary}</p>
-                        </div>
-                    )}
-
-                    <div className="flex gap-4 justify-center">
-                        <button onClick={handleRestart} className="btn-secondary">
-                            Try Another Passage
-                        </button>
-                        <button
-                            onClick={() => navigate('/user/complete')}
-                            className="btn-primary"
-                        >
-                            View Full Results
-                        </button>
-                    </div>
+                    <h2 className="text-xl font-bold text-slate-900 mb-2">Task completed.</h2>
+                    <p className="text-slate-600 mb-6">Thank you!</p>
+                    <button
+                        onClick={() => navigate('/user')}
+                        className="btn-primary"
+                    >
+                        Continue
+                    </button>
                 </div>
             )}
 

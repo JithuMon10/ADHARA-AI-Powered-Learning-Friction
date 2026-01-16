@@ -1,0 +1,382 @@
+/* Teacher Dashboard */
+
+.teacher-dashboard {
+    min-height: 100vh;
+    background: #f5f7fa;
+}
+
+/* Header */
+.dashboard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+}
+
+.connection-status {
+    font-size: 0.85rem;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.connection-status.connected {
+    color: #a5d6a7;
+}
+
+.connection-status.disconnected {
+    color: #ef9a9a;
+}
+
+.logout-button {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logout-button:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Content */
+.dashboard-content {
+    padding: 24px 32px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+/* Cards */
+.session-card,
+.activities-card,
+.ai-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.session-card h2,
+.activities-card h3,
+.ai-card h3 {
+    margin: 0 0 20px;
+    color: #333;
+}
+
+/* Session Info */
+.session-info {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.info-item {
+    text-align: center;
+}
+
+.info-item .label {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-bottom: 4px;
+}
+
+.info-item .value {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.friction-badge {
+    color: white !important;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9rem !important;
+}
+
+/* Activity List */
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #ddd;
+}
+
+.activity-item.correct {
+    border-left-color: #43a047;
+}
+
+.activity-item.incorrect {
+    border-left-color: #e53935;
+}
+
+.activity-type {
+    font-weight: 600;
+    color: #555;
+    text-transform: capitalize;
+    flex: 1;
+}
+
+.activity-result {
+    font-size: 1.2rem;
+}
+
+.activity-time {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.metrics-summary {
+    display: flex;
+    gap: 24px;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* AI Card */
+.ai-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.ai-header h3 {
+    margin: 0 !important;
+}
+
+.analyze-button {
+    padding: 10px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.analyze-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.analyze-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.ai-content {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 20px;
+    min-height: 150px;
+}
+
+.ai-output {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #333;
+}
+
+.ai-placeholder {
+    color: #888;
+    text-align: center;
+    margin: 0;
+}
+
+/* No Sessions */
+.no-sessions {
+    text-align: center;
+    padding: 60px 20px;
+    color: #888;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.no-sessions h3 {
+    color: #555;
+    margin-bottom: 16px;
+}
+
+.no-sessions p {
+    margin: 8px 0;
+}
+
+.no-sessions .instructions {
+    text-align: left;
+    max-width: 400px;
+    margin: 24px auto;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.no-sessions .instructions li {
+    margin: 8px 0;
+    color: #555;
+}
+
+.no-sessions .instructions a {
+    color: #667eea;
+}
+
+.big-refresh-button {
+    margin-top: 20px;
+    padding: 16px 32px;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Header actions */
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.refresh-button {
+    padding: 10px 20px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+/* Sessions list */
+.sessions-list {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sessions-list h3 {
+    margin: 0 0 12px;
+    font-size: 0.9rem;
+    color: #888;
+}
+
+.session-item {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.session-item.active {
+    border-color: #667eea;
+    background: #f0f4ff;
+}
+
+.session-name {
+    font-weight: 600;
+    color: #333;
+}
+
+.session-time {
+    font-size: 0.85rem;
+    color: #888;
+}
+
+/* Metrics card */
+.metrics-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.metrics-card h3 {
+    margin: 0 0 16px;
+    color: #333;
+}
+
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+.metric {
+    text-align: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.metric-label {
+    display: block;
+    font-size: 0.8rem;
+    color: #888;
+    margin-top: 4px;
+}
+
+.no-data {
+    color: #888;
+    text-align: center;
+    padding: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+
+    .session-info,
+    .metrics-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-content {
+        padding: 16px;
+    }
+}

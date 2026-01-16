@@ -1,0 +1,200 @@
+/* Child Complete Page */
+
+.child-complete {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #FFFACD 0%, #FFEFD5 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Confetti */
+.confetti-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.confetti {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    animation: confettiFall 3s ease-out forwards;
+}
+
+@keyframes confettiFall {
+    0% {
+        transform: translateY(-100px) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* Content */
+.complete-content {
+    text-align: center;
+    z-index: 10;
+    padding: 24px;
+}
+
+/* Trophy */
+.trophy {
+    margin-bottom: 16px;
+}
+
+.trophy-emoji {
+    font-size: 8rem;
+    display: inline-block;
+    animation: trophyBounce 1s ease-in-out infinite;
+}
+
+@keyframes trophyBounce {
+
+    0%,
+    100% {
+        transform: scale(1) rotate(-5deg);
+    }
+
+    50% {
+        transform: scale(1.1) rotate(5deg);
+    }
+}
+
+/* Title */
+.complete-title {
+    font-size: 4rem;
+    font-weight: 900;
+    color: #FF6B6B;
+    margin: 0 0 8px;
+    text-shadow: 4px 4px 0 #fff;
+    animation: titlePop 0.5s ease-out;
+}
+
+@keyframes titlePop {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+.complete-subtitle {
+    font-size: 1.5rem;
+    color: #555;
+    margin: 0 0 24px;
+    font-weight: 600;
+}
+
+/* Stars */
+.stars-row {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.stars-row span {
+    font-size: 2.5rem;
+    animation: starSpin 1s ease-out backwards;
+}
+
+.stars-row span:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.stars-row span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.stars-row span:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.stars-row span:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.stars-row span:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+@keyframes starSpin {
+    from {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+    }
+}
+
+/* Mascot Goodbye */
+.mascot-goodbye {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+}
+
+.mascot-goodbye .mascot-emoji {
+    font-size: 4rem;
+    animation: wave 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes wave {
+    from {
+        transform: rotate(-10deg);
+    }
+
+    to {
+        transform: rotate(10deg);
+    }
+}
+
+.speech-bubble {
+    background: white;
+    padding: 16px 24px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.speech-bubble p {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Play Again Button */
+.play-again-button {
+    padding: 20px 48px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(180deg, #4CAF50 0%, #45A049 100%);
+    border: 4px solid white;
+    border-radius: 40px;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #2E7D32;
+    transition: all 0.2s;
+}
+
+.play-again-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 0 #2E7D32;
+}

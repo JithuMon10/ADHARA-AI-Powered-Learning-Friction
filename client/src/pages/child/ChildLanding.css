@@ -1,0 +1,386 @@
+/* Child Landing Page - CocomeloN Style */
+
+.child-landing {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #87CEEB 0%, #98FB98 50%, #90EE90 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Decorations */
+.decorations {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+}
+
+.star {
+    position: absolute;
+    font-size: 2rem;
+    animation: twinkle 2s ease-in-out infinite;
+}
+
+.star-1 {
+    top: 10%;
+    left: 15%;
+    animation-delay: 0s;
+}
+
+.star-2 {
+    top: 20%;
+    right: 20%;
+    animation-delay: 0.5s;
+}
+
+.star-3 {
+    top: 5%;
+    left: 50%;
+    animation-delay: 1s;
+}
+
+@keyframes twinkle {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+}
+
+.cloud {
+    position: absolute;
+    font-size: 4rem;
+    animation: float 6s ease-in-out infinite;
+}
+
+.cloud-1 {
+    top: 8%;
+    left: 5%;
+}
+
+.cloud-2 {
+    top: 12%;
+    right: 8%;
+    animation-delay: 3s;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateY(0) translateX(0);
+    }
+
+    50% {
+        transform: translateY(-10px) translateX(5px);
+    }
+}
+
+.rainbow {
+    position: absolute;
+    top: 15%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 5rem;
+    animation: rainbowBounce 3s ease-in-out infinite;
+}
+
+@keyframes rainbowBounce {
+
+    0%,
+    100% {
+        transform: translateX(-50%) rotate(-5deg);
+    }
+
+    50% {
+        transform: translateX(-50%) rotate(5deg);
+    }
+}
+
+/* Admin Corner */
+.admin-corner {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.3);
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    backdrop-filter: blur(5px);
+}
+
+.admin-corner:hover {
+    background: rgba(255, 255, 255, 0.6);
+    transform: scale(1.1);
+}
+
+/* Main Content */
+.landing-content {
+    text-align: center;
+    z-index: 10;
+}
+
+/* Mascot */
+.mascot {
+    margin-bottom: 16px;
+}
+
+.mascot-emoji {
+    font-size: 5rem;
+    display: inline-block;
+    animation: mascotBounce 1s ease-in-out infinite;
+}
+
+@keyframes mascotBounce {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-15px);
+    }
+}
+
+/* Title */
+.title {
+    font-size: 4rem;
+    font-weight: 900;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+}
+
+.letter {
+    display: inline-block;
+    animation: letterBounce 0.8s ease-in-out infinite;
+    animation-delay: calc(var(--delay) * 0.1s);
+    text-shadow: 3px 3px 0 #fff, 5px 5px 0 rgba(0, 0, 0, 0.1);
+}
+
+.letter:nth-child(1) {
+    color: #FF6B6B;
+}
+
+.letter:nth-child(2) {
+    color: #4ECDC4;
+}
+
+.letter:nth-child(3) {
+    color: #FFE66D;
+}
+
+.letter:nth-child(4) {
+    color: #95E1D3;
+}
+
+.letter:nth-child(5) {
+    color: #F38181;
+}
+
+.letter:nth-child(6) {
+    color: #AA96DA;
+}
+
+@keyframes letterBounce {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(-3deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(3deg);
+    }
+}
+
+/* Subtitle */
+.subtitle {
+    font-size: 1.5rem;
+    color: #2d3436;
+    font-weight: 600;
+    margin: 16px 0 32px;
+    text-shadow: 1px 1px 0 #fff;
+}
+
+/* START Button */
+.start-button {
+    position: relative;
+    padding: 24px 80px;
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: white;
+    background: linear-gradient(180deg, #FF6B6B 0%, #EE5A5A 100%);
+    border: 6px solid #fff;
+    border-radius: 60px;
+    cursor: pointer;
+    box-shadow:
+        0 8px 0 #CC4444,
+        0 12px 20px rgba(0, 0, 0, 0.2),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.1);
+    transition: all 0.15s ease;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.start-button:hover {
+    transform: translateY(-4px);
+    box-shadow:
+        0 12px 0 #CC4444,
+        0 16px 24px rgba(0, 0, 0, 0.25),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.start-button:active,
+.start-button.clicked {
+    transform: translateY(4px);
+    box-shadow:
+        0 4px 0 #CC4444,
+        0 6px 12px rgba(0, 0, 0, 0.2),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.1);
+}
+
+.button-text {
+    letter-spacing: 4px;
+}
+
+.button-icon {
+    font-size: 2rem;
+    animation: rocketShake 0.5s ease-in-out infinite;
+}
+
+@keyframes rocketShake {
+
+    0%,
+    100% {
+        transform: rotate(-5deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+.button-shine {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent);
+    animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+    0% {
+        left: -100%;
+    }
+
+    50%,
+    100% {
+        left: 100%;
+    }
+}
+
+/* Hint */
+.hint {
+    margin-top: 24px;
+    font-size: 1.1rem;
+    color: #555;
+    animation: hintPulse 2s ease-in-out infinite;
+}
+
+@keyframes hintPulse {
+
+    0%,
+    100% {
+        opacity: 0.7;
+    }
+
+    50% {
+        opacity: 1;
+    }
+}
+
+/* Bottom Decorations */
+.bottom-decor {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    font-size: 2.5rem;
+}
+
+.bottom-decor span {
+    animation: flowerSway 2s ease-in-out infinite;
+}
+
+.bottom-decor span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.bottom-decor span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.bottom-decor span:nth-child(4) {
+    animation-delay: 0.6s;
+}
+
+.bottom-decor span:nth-child(5) {
+    animation-delay: 0.8s;
+}
+
+@keyframes flowerSway {
+
+    0%,
+    100% {
+        transform: rotate(-5deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .title {
+        font-size: 2.5rem;
+    }
+
+    .start-button {
+        padding: 16px 48px;
+        font-size: 1.8rem;
+    }
+
+    .mascot-emoji {
+        font-size: 3rem;
+    }
+}

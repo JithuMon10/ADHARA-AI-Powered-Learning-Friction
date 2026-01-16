@@ -1,0 +1,313 @@
+/* Child Activity Page */
+
+.child-activity {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #E8F5E9 0%, #C8E6C9 100%);
+    padding: 20px;
+    position: relative;
+}
+
+/* Tracking indicator */
+.tracking-indicator {
+    position: fixed;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    z-index: 100;
+}
+
+/* Mascot */
+.activity-mascot {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.mascot-bubble {
+    display: inline-block;
+    background: white;
+    border-radius: 24px;
+    padding: 16px 28px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 8px;
+    animation: bubbleAppear 0.5s ease-out;
+}
+
+.mascot-bubble p {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #333;
+}
+
+.activity-mascot .mascot-emoji {
+    font-size: 4rem;
+    display: inline-block;
+    animation: mascotBob 1s ease-in-out infinite;
+}
+
+@keyframes mascotBob {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-8px);
+    }
+}
+
+@keyframes bubbleAppear {
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Progress Bar */
+.progress-bar {
+    height: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    margin: 0 auto 24px;
+    max-width: 400px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+/* Activity Content */
+.activity-content {
+    max-width: 500px;
+    margin: 0 auto;
+    text-align: center;
+    animation: slideIn 0.5s ease-out;
+}
+
+.activity-content.correct {
+    animation: celebrate 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes celebrate {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Question */
+.activity-question {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 24px;
+    text-shadow: 1px 1px 0 #fff;
+}
+
+/* Counting Display */
+.counting-display {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+}
+
+.counting-star {
+    font-size: 3rem;
+    animation: starPop 0.5s ease-out backwards;
+}
+
+@keyframes starPop {
+    from {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1) rotate(0);
+        opacity: 1;
+    }
+}
+
+/* Letter Display */
+.letter-display {
+    font-size: 8rem;
+    font-weight: 900;
+    color: #2196F3;
+    text-shadow: 4px 4px 0 #1976D2;
+    margin-bottom: 32px;
+    animation: letterBounce 1s ease-in-out infinite;
+}
+
+@keyframes letterBounce {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Options Grid */
+.options-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.option-button {
+    padding: 24px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(180deg, #FF9800 0%, #F57C00 100%);
+    border: 4px solid white;
+    border-radius: 20px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #E65100;
+    transition: all 0.2s;
+}
+
+.option-button:hover:not(:disabled) {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 8px 0 #E65100;
+}
+
+.option-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #E65100;
+}
+
+.option-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Drawing Section */
+.drawing-section {
+    text-align: center;
+}
+
+.drawing-canvas {
+    background: white;
+    border: 6px solid #FF6B6B;
+    border-radius: 20px;
+    cursor: crosshair;
+    touch-action: none;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.done-button {
+    margin-top: 20px;
+    padding: 16px 48px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(180deg, #4CAF50 0%, #45A049 100%);
+    border: 4px solid white;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #2E7D32;
+    transition: all 0.2s;
+}
+
+.done-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.done-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Feedback Overlay */
+.feedback-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 100;
+}
+
+.feedback-overlay.correct {
+    animation: fadeInOut 1.5s ease-out;
+}
+
+.feedback-emoji {
+    font-size: 10rem;
+    animation: emojiPop 0.5s ease-out;
+}
+
+@keyframes emojiPop {
+    0% {
+        transform: scale(0);
+    }
+
+    50% {
+        transform: scale(1.2);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes fadeInOut {
+    0% {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}

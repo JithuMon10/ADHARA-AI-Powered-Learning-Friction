@@ -1,0 +1,284 @@
+/* Child Registration Page */
+
+.child-register {
+    min-height: 100vh;
+    background: linear-gradient(180deg, #FFE5B4 0%, #FFDAB9 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorations */
+.balloon {
+    position: absolute;
+    font-size: 3rem;
+    animation: floatUp 4s ease-in-out infinite;
+}
+
+.balloon-1 {
+    left: 10%;
+    top: 20%;
+    animation-delay: 0s;
+}
+
+.balloon-2 {
+    right: 15%;
+    top: 30%;
+    animation-delay: 1s;
+}
+
+.balloon-3 {
+    left: 20%;
+    top: 60%;
+    animation-delay: 2s;
+}
+
+@keyframes floatUp {
+
+    0%,
+    100% {
+        transform: translateY(0) rotate(-5deg);
+    }
+
+    50% {
+        transform: translateY(-20px) rotate(5deg);
+    }
+}
+
+/* Content */
+.register-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 24px;
+}
+
+/* Mascot Section */
+.mascot-section {
+    margin-bottom: 32px;
+}
+
+.mascot-bubble {
+    background: white;
+    border-radius: 24px;
+    padding: 20px 28px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    position: relative;
+    animation: bubblePop 0.5s ease-out;
+}
+
+.mascot-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 15px solid transparent;
+    border-right: 15px solid transparent;
+    border-top: 15px solid white;
+}
+
+.mascot-bubble p {
+    font-size: 1.4rem;
+    color: #333;
+    margin: 0;
+    font-weight: 600;
+}
+
+@keyframes bubblePop {
+    0% {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.mascot-emoji {
+    font-size: 5rem;
+    display: inline-block;
+    animation: mascotWave 1s ease-in-out infinite;
+}
+
+@keyframes mascotWave {
+
+    0%,
+    100% {
+        transform: rotate(-5deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+/* Input Section */
+.input-section {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    align-items: center;
+}
+
+.name-input {
+    width: 100%;
+    max-width: 350px;
+    padding: 20px 24px;
+    font-size: 1.5rem;
+    border: 4px solid #FFB6C1;
+    border-radius: 20px;
+    text-align: center;
+    outline: none;
+    background: white;
+    transition: all 0.3s;
+}
+
+.name-input:focus {
+    border-color: #FF69B4;
+    box-shadow: 0 0 0 4px rgba(255, 105, 180, 0.2);
+}
+
+.name-input::placeholder {
+    color: #ccc;
+}
+
+.next-button {
+    padding: 16px 48px;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    background: linear-gradient(180deg, #4CAF50 0%, #45A049 100%);
+    border: 4px solid white;
+    border-radius: 30px;
+    cursor: pointer;
+    box-shadow: 0 4px 0 #2E7D32;
+    transition: all 0.2s;
+}
+
+.next-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #2E7D32;
+}
+
+.next-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Age Section */
+.section-label {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: #555;
+    margin-bottom: 20px;
+}
+
+.age-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.age-button {
+    width: 55px;
+    height: 55px;
+    font-size: 1.4rem;
+    font-weight: 900;
+    color: white;
+    background: linear-gradient(180deg, #9C27B0 0%, #7B1FA2 100%);
+    border: 3px solid white;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 3px 0 #6A1B9A;
+    transition: all 0.2s;
+}
+
+.age-button:hover {
+    transform: translateY(-4px) scale(1.1);
+    box-shadow: 0 8px 0 #6A1B9A;
+}
+
+/* Gender Section */
+.gender-buttons {
+    display: flex;
+    gap: 24px;
+    justify-content: center;
+}
+
+.gender-button {
+    padding: 24px 40px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    border: 4px solid white;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.gender-button.boy {
+    background: linear-gradient(180deg, #2196F3 0%, #1976D2 100%);
+    box-shadow: 0 4px 0 #1565C0;
+}
+
+.gender-button.girl {
+    background: linear-gradient(180deg, #E91E63 0%, #C2185B 100%);
+    box-shadow: 0 4px 0 #AD1457;
+}
+
+.gender-button:hover {
+    transform: translateY(-4px) scale(1.05);
+}
+
+.gender-icon {
+    font-size: 3rem;
+}
+
+/* Progress Dots */
+.progress-dots {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    margin-top: 32px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ddd;
+    transition: all 0.3s;
+}
+
+.dot.active {
+    background: #FF69B4;
+    transform: scale(1.2);
+}
+
+/* Animation */
+.fade-in {
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
