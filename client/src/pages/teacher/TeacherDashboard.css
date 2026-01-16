@@ -420,13 +420,19 @@
 
 .markdown-output ol,
 .markdown-output ul {
-    margin: 8px 0;
-    padding-left: 20px;
+    margin: 10px 0;
+    padding-left: 24px;
 }
 
 .markdown-output li {
-    margin: 6px 0;
+    margin: 8px 0;
     font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.markdown-output li strong {
+    color: #1e3a5f;
+    font-weight: 700;
 }
 
 .markdown-output hr {

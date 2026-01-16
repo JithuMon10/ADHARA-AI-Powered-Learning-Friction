@@ -195,68 +195,35 @@ function TeacherDashboard() {
 
         const faceAnalysis = summary.faceAnalysis || {}
 
-        const prompt = `You are a learning analyst. Analyze this student session and provide a STRUCTURED report.
+        const prompt = `You are a learning analyst. Provide a BRIEF, STRUCTURED report.
 
 STUDENT: ${child.name || 'Unknown'}, Age ${child.age || '?'}
-AGE GROUP: ${deviations?.ageGroup} (${deviations?.baseline?.label})
+SESSION: ${responses.length} activities, ${responses.filter(r => r.correct).length} correct, ${summary.avgResponseTime || 0}ms avg response
+FRICTION: ${friction.level} (${friction.score.toFixed(0)}% deviation from baseline)
+SPEECH: ${speechAnalysis.totalWordsSpoken || 0} words, ${speechAnalysis.fillerWordCount || 0} fillers, ${speechAnalysis.stammerCount || 0} stammers
+EMOTION: ${faceAnalysis.dominantEmotion || 'unknown'} dominant, ${((faceAnalysis.stressRatio || 0) * 100).toFixed(0)}% stress indicators
 
-SESSION DATA:
-- Activities completed: ${responses.length}
-- Correct answers: ${responses.filter(r => r.correct).length}/${responses.length}
-- Average response time: ${summary.avgResponseTime || 0}ms
-- Re-attempts: ${summary.totalCorrections || 0}
-- Hesitation events: ${summary.hesitationCount || 0}
-- Stress indicators: ${summary.stressIndicatorCount || 0}
-
-SPEECH ANALYSIS DATA:
-- Words spoken: ${speechAnalysis.totalWordsSpoken || 0}
-- Speech rate: ${speechAnalysis.speechRateWPM || 0} WPM
-- Filler words detected: ${speechAnalysis.fillerWordCount || 0} (um, uh, like, etc.)
-- Stammers detected: ${speechAnalysis.stammerCount || 0} (repeated syllables)
-- Average pause between words: ${speechAnalysis.avgPauseDurationMs || 0}ms
-- Self-corrections: ${speechAnalysis.selfCorrections || 0}
-- Silence ratio: ${speechAnalysis.silenceRatio || 0}
-
-FACE/EMOTION ANALYSIS DATA:
-- Dominant emotion: ${faceAnalysis.dominantEmotion || 'unknown'}
-- Emotion distribution: ${JSON.stringify(faceAnalysis.emotionDistribution || {})}
-- Blink rate: ${faceAnalysis.blinkRatePerMin || 0}/min (baseline: 15-18/min)
-- Face presence: ${faceAnalysis.facePresencePercent || 0}% of session
-- Gaze stability: ${faceAnalysis.gazeOnScreenPercent || 0}% looking at screen
-- Stress/negative ratio: ${faceAnalysis.stressRatio || 0}
-- Recent emotions: ${(faceAnalysis.recentEmotions || []).join(', ')}
-
-BASELINE COMPARISON:
-- Response time deviation: ${deviations?.responseTimeDeviation}% from expected
-- Correction deviation: ${deviations?.correctionsDeviation}% from expected
-- Overall friction level: ${friction.level} (${friction.score.toFixed(0)}% deviation)
-
-OBSERVED STRENGTHS: ${strengths.join('; ') || 'None identified'}
-OBSERVED CONCERNS: ${concerns.join('; ') || 'None identified'}
-
-RESPOND USING THIS EXACT FORMAT:
+RESPOND IN THIS EXACT FORMAT (keep each line SHORT):
 
 ## Summary
-[2 sentences max. Be direct. Include notable speech or face observations.]
+One sentence overview of the session.
 
-## Category Breakdown
-| Category | Level | Notes |
-|----------|-------|-------|
-| Reading/Recognition | Low/Medium/High | [3 words max] |
-| Attention | Low/Medium/High | [3 words max] |
-| Processing Speed | Low/Medium/High | [3 words max] |
-| Speech/Verbal | Low/Medium/High | [3 words max] |
-| Emotional State | Low/Medium/High | [3 words max] |
+## Friction Levels
+- **Reading**: LOW/MEDIUM/HIGH - Brief reason (5 words max)
+- **Attention**: LOW/MEDIUM/HIGH - Brief reason (5 words max)
+- **Processing**: LOW/MEDIUM/HIGH - Brief reason (5 words max)
+- **Speech**: LOW/MEDIUM/HIGH - Brief reason (5 words max)
+- **Emotional**: LOW/MEDIUM/HIGH - Brief reason (5 words max)
 
-${friction.level === 'High' || faceAnalysis.stressRatio > 0.3 || speechAnalysis.stammerCount > 2 ? `## Early Patterns Noted
-[Note any emotional or verbal patterns that warrant observation. Use cautious language only.]` : ''}
+## Key Observations
+- First key observation (one short sentence)
+- Second key observation (one short sentence)
 
-## Teacher Action Items
-1. [Specific actionable step]
-2. [Specific actionable step]${friction.level === 'High' ? '\n3. Consider consultation with learning specialist' : ''}${faceAnalysis.stressRatio > 0.3 ? '\n• Monitor emotional well-being' : ''}${speechAnalysis.stammerCount > 2 ? '\n• Consider speech/language screening' : ''}
+## Teacher Actions
+1. First actionable step
+2. Second actionable step
 
----
-*Analysis based on ${responses.length} activities, ${speechAnalysis.totalWordsSpoken || 0} words, and ${summary.faceDataPoints || 0} face samples. Human review always recommended.*`
+IMPORTANT: Keep ALL lines under 60 characters. Be concise.`
 
 
         try {
