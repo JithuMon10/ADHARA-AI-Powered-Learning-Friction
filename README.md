@@ -86,7 +86,30 @@ All data in this prototype is **synthetic and simulated** for demonstration purp
 
 ## Tech Stack
 
-*To be defined.*
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 18 + Vite |
+| Styling | Tailwind CSS |
+| Routing | React Router DOM |
+| Icons | Lucide React |
+| Charts | Recharts |
+| Backend | Node.js + Express (planned) |
+| LLM | Ollama with local model (planned) |
+
+## Getting Started
+
+```bash
+# Navigate to client folder
+cd client
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
+```
+
+The app will be available at `http://localhost:3000`
 
 ---
 
