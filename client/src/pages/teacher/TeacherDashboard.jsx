@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './TeacherDashboard.css'
 
 /**
- * Teacher Dashboard - View student sessions and AI analysis
- * Shows friction signals, patterns, and recommendations
+ * Teacher Dashboard - Enhanced with auto-analysis and early signs detection
  */
 
 const OLLAMA_URL = 'http://localhost:11434'
@@ -17,95 +16,64 @@ function TeacherDashboard() {
     const [aiAnalysis, setAiAnalysis] = useState('')
     const [isAnalyzing, setIsAnalyzing] = useState(false)
     const [ollamaConnected, setOllamaConnected] = useState(false)
+    const [autoAnalyze, setAutoAnalyze] = useState(true)
 
     useEffect(() => {
-        // Check auth
         if (!localStorage.getItem('adhara_admin')) {
             navigate('/admin-login')
             return
         }
-
-        // Load all sessions
         loadSessions()
-
-        // Check Ollama
         checkOllama()
     }, [navigate])
 
+    // Auto-analyze when session is selected
+    useEffect(() => {
+        if (selectedSession && autoAnalyze && ollamaConnected && !aiAnalysis) {
+            analyzeWithAI()
+        }
+    }, [selectedSession, autoAnalyze, ollamaConnected])
+
     const loadSessions = () => {
-        // Try to load from multiple sources
         const sessions = []
 
-        // Current session
         const current = localStorage.getItem('adhara_session_complete')
         if (current) {
             try {
                 const parsed = JSON.parse(current)
-                if (parsed && parsed.completedAt) {
-                    sessions.push(parsed)
-                }
-            } catch (e) {
-                console.error('Error parsing current session:', e)
-            }
+                if (parsed?.completedAt) sessions.push(parsed)
+            } catch (e) { }
         }
 
-        // History
         const history = localStorage.getItem('adhara_sessions_history')
         if (history) {
             try {
                 const parsed = JSON.parse(history)
                 if (Array.isArray(parsed)) {
-                    // Add history sessions (avoid duplicates by checking completedAt)
                     parsed.forEach(s => {
-                        if (s.completedAt && !sessions.find(existing => existing.completedAt === s.completedAt)) {
+                        if (s.completedAt && !sessions.find(ex => ex.completedAt === s.completedAt)) {
                             sessions.push(s)
                         }
                     })
                 }
-            } catch (e) {
-                console.error('Error parsing history:', e)
-            }
+            } catch (e) { }
         }
 
-        // Live signals (in progress)
-        const live = localStorage.getItem('adhara_live_signals')
-        if (live && sessions.length === 0) {
-            try {
-                const parsed = JSON.parse(live)
-                if (parsed && parsed.responses && parsed.responses.length > 0) {
-                    parsed.isLive = true
-                    sessions.push(parsed)
-                }
-            } catch (e) {
-                console.error('Error parsing live signals:', e)
-            }
-        }
-
-        // Sort by most recent
-        sessions.sort((a, b) => new Date(b.completedAt || b.lastUpdate) - new Date(a.completedAt || a.lastUpdate))
-
+        sessions.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt))
         setSessions(sessions)
-        if (sessions.length > 0) {
-            setSelectedSession(sessions[0])
-        }
+        if (sessions.length > 0) setSelectedSession(sessions[0])
     }
 
     const checkOllama = async () => {
         try {
             const res = await fetch(`${OLLAMA_URL}/api/tags`)
             setOllamaConnected(res.ok)
-        } catch {
-            setOllamaConnected(false)
-        }
+        } catch { setOllamaConnected(false) }
     }
 
-    const handleLogout = () => {
-        localStorage.removeItem('adhara_admin')
-        navigate('/play')
-    }
-
-    const handleRefresh = () => {
-        loadSessions()
+    const handleSelectSession = (session) => {
+        setSelectedSession(session)
+        setAiAnalysis('') // Reset for new analysis
     }
 
     const analyzeWithAI = async () => {
@@ -117,50 +85,68 @@ function TeacherDashboard() {
         const child = selectedSession.childData || {}
         const responses = selectedSession.responses || []
         const summary = selectedSession.summary || {}
+        const stressIndicators = selectedSession.stressIndicators || []
+        const hesitations = selectedSession.hesitationEvents || []
+        const faceData = selectedSession.faceData || []
+        const voiceData = selectedSession.voiceData || []
 
-        // Use summary if available, otherwise calculate
         const totalResponses = summary.totalResponses || responses.length
         const correctResponses = summary.correctResponses || responses.filter(r => r.correct).length
-        const avgResponseTime = summary.avgResponseTime || (responses.length > 0
-            ? Math.round(responses.reduce((sum, r) => sum + (r.responseTimeMs || 0), 0) / responses.length)
-            : 0)
-        const corrections = summary.totalCorrections || selectedSession.corrections || 0
-        const mouseMovements = summary.totalMouseMovements || selectedSession.mouseMovements || 0
-        const hesitationCount = summary.hesitationCount || (selectedSession.hesitationEvents?.length || 0)
+        const avgResponseTime = summary.avgResponseTime || 0
+        const corrections = summary.totalCorrections || 0
+        const mouseMovements = summary.totalMouseMovements || 0
+        const hesitationCount = summary.hesitationCount || hesitations.length
+        const stressCount = summary.stressIndicatorCount || stressIndicators.length
 
-        const prompt = `You are ADHARA, an AI assistant helping educators understand learning friction patterns. Analyze this student's session data and provide insights.
+        const prompt = `You are ADHARA, an AI assistant analyzing learning friction patterns for educators. This analysis is CONFIDENTIAL for teachers only.
 
-IMPORTANT RULES:
-- Do NOT diagnose or name any conditions
-- Do NOT use medical/psychological language
-- Use ONLY terms like "learning friction", "interaction patterns", "may indicate"
-- Be specific about what you observed
-- End with actionable suggestions for the teacher
+ANALYZE THIS SESSION AND PROVIDE EARLY DETECTION INSIGHTS:
 
-STUDENT SESSION DATA:
+STUDENT PROFILE:
 - Name: ${child.name || 'Unknown'}
 - Age: ${child.age || 'Unknown'} years
 - Gender: ${child.gender || 'Unknown'}
 
-ACTIVITY METRICS:
-- Total activities completed: ${totalResponses}
+SESSION METRICS:
+- Total activities: ${totalResponses}
 - Correct on first try: ${correctResponses}/${totalResponses}
 - Re-attempts needed: ${corrections}
 - Average response time: ${avgResponseTime}ms
-- Total mouse movements tracked: ${mouseMovements}
-- Hesitation events detected: ${hesitationCount}
-- Session duration: ${Math.round((selectedSession.totalDurationMs || 0) / 1000)} seconds
+- Mouse movements tracked: ${mouseMovements}
+- Hesitation events: ${hesitationCount}
+- Stress indicators detected: ${stressCount}
+- Face tracking data points: ${faceData.length}
+- Voice recordings: ${voiceData.length}
 
-RESPONSE PATTERNS:
-${responses.slice(0, 10).map((r, i) => `${i + 1}. ${r.type}: ${r.correct ? '✓ Correct' : '✗ Incorrect'} (${r.responseTimeMs}ms)`).join('\n')}
+RESPONSE DETAILS:
+${responses.slice(0, 15).map((r, i) => `${i + 1}. ${r.type}: ${r.correct !== undefined ? (r.correct ? '✓' : '✗') : 'verbal'} (${r.responseTimeMs || 'N/A'}ms)`).join('\n')}
 
-Provide:
-1. OBSERVATION SUMMARY (2-3 sentences about interaction patterns observed)
-2. FRICTION LEVEL: Expected / Elevated / High
-3. SPECIFIC PATTERNS NOTICED (bullet points, be specific)
-4. TEACHER RECOMMENDATIONS (actionable next steps)
+STRESS INDICATORS DETECTED:
+${stressIndicators.map(s => `- ${s.type} at activity ${s.activity}`).join('\n') || 'None detected'}
 
-Remember: Use cautious language like "may indicate" or "appears to show". Always recommend human review.`
+PROVIDE YOUR ANALYSIS WITH THESE SECTIONS:
+
+1. **OBSERVATION SUMMARY** (2-3 sentences about overall interaction patterns)
+
+2. **FRICTION LEVEL**: Expected / Elevated / High
+
+3. **EARLY SIGNS DETECTED** (use cautious language like "patterns may indicate"):
+   - Look for signs that MAY suggest: visual processing differences, attention variance, fine motor development, reading/letter recognition patterns
+   - If letter reversal (b/d/p/q): may indicate early visual processing patterns common in developing readers
+   - If slow response + many corrections: may indicate processing speed variance
+   - If rapid mouse + stress indicators: may indicate frustration or anxiety patterns
+   - If hesitations before answers: may indicate uncertainty or attention fluctuation
+
+4. **POTENTIAL EARLY INDICATORS** (optional - only if significant patterns):
+   - Use format: "Pattern may warrant further observation for [area]"
+   - Areas: Reading Development, Attention Patterns, Visual Processing, Motor Skills, Anxiety/Stress Response
+   - Do NOT diagnose - only suggest areas for additional professional assessment
+
+5. **RECOMMENDATIONS FOR TEACHER**:
+   - Specific actionable steps
+   - Suggest professional assessment if patterns are significant
+
+Remember: This is for early detection only. Always recommend professional evaluation for any concerns. Use phrases like "may indicate", "warrants observation", "consider assessing".`
 
         try {
             const res = await fetch(`${OLLAMA_URL}/api/generate`, {
@@ -170,7 +156,7 @@ Remember: Use cautious language like "may indicate" or "appears to show". Always
                     model: MODEL,
                     prompt,
                     stream: false,
-                    options: { temperature: 0.3, num_predict: 500 }
+                    options: { temperature: 0.3, num_predict: 700 }
                 })
             })
 
@@ -178,33 +164,45 @@ Remember: Use cautious language like "may indicate" or "appears to show". Always
                 const data = await res.json()
                 setAiAnalysis(data.response || 'No analysis generated')
             } else {
-                setAiAnalysis('Error: Could not generate analysis. Make sure Ollama is running with the Qwen model.')
+                setAiAnalysis('Error: Could not generate analysis.')
             }
         } catch (err) {
-            setAiAnalysis(`Error: ${err.message}. Make sure Ollama is running on localhost:11434`)
+            setAiAnalysis(`Error: ${err.message}`)
         } finally {
             setIsAnalyzing(false)
         }
     }
 
-    const getFrictionIndicator = () => {
+    const getStressLevel = () => {
+        if (!selectedSession) return { level: 'Unknown', color: '#888', icon: '❓' }
+
+        const stressCount = selectedSession.stressIndicators?.length || 0
+        const hesitations = selectedSession.hesitationEvents?.length || 0
+        const corrections = selectedSession.corrections || 0
+
+        const score = stressCount * 2 + hesitations + corrections
+
+        if (score > 10) return { level: 'High Stress Detected', color: '#e53935', icon: '🔴' }
+        if (score > 5) return { level: 'Elevated Concern', color: '#fb8c00', icon: '🟠' }
+        if (score > 2) return { level: 'Mild Patterns', color: '#fdd835', icon: '🟡' }
+        return { level: 'Normal Range', color: '#43a047', icon: '🟢' }
+    }
+
+    const getFrictionLevel = () => {
         if (!selectedSession) return { level: 'Unknown', color: '#888' }
-
-        const summary = selectedSession.summary || {}
-        const corrections = summary.totalCorrections || selectedSession.corrections || 0
-        const responses = summary.totalResponses || (selectedSession.responses?.length || 1)
+        const corrections = selectedSession.corrections || 0
+        const responses = selectedSession.responses?.length || 1
         const ratio = corrections / responses
-
         if (ratio > 0.5) return { level: 'High', color: '#e53935' }
         if (ratio > 0.2) return { level: 'Elevated', color: '#fb8c00' }
         return { level: 'Expected', color: '#43a047' }
     }
 
-    const friction = getFrictionIndicator()
+    const stress = getStressLevel()
+    const friction = getFrictionLevel()
 
     return (
         <div className="teacher-dashboard">
-            {/* Header */}
             <header className="dashboard-header">
                 <div className="header-left">
                     <h1>👩‍🏫 Teacher Dashboard</h1>
@@ -213,134 +211,136 @@ Remember: Use cautious language like "may indicate" or "appears to show". Always
                     </span>
                 </div>
                 <div className="header-actions">
-                    <button onClick={handleRefresh} className="refresh-button">
-                        🔄 Refresh
-                    </button>
-                    <button onClick={handleLogout} className="logout-button">
-                        Logout
-                    </button>
+                    <label className="auto-toggle">
+                        <input type="checkbox" checked={autoAnalyze} onChange={e => setAutoAnalyze(e.target.checked)} />
+                        Auto-Analyze
+                    </label>
+                    <button onClick={loadSessions} className="refresh-button">🔄 Refresh</button>
+                    <button onClick={() => { localStorage.removeItem('adhara_admin'); navigate('/play') }} className="logout-button">Logout</button>
                 </div>
             </header>
 
             <div className="dashboard-content">
                 {/* Session List */}
-                {sessions.length > 1 && (
+                {sessions.length > 0 && (
                     <div className="sessions-list">
-                        <h3>Sessions ({sessions.length})</h3>
+                        <h3>📋 Sessions ({sessions.length})</h3>
                         {sessions.map((s, i) => (
                             <button
                                 key={i}
                                 className={`session-item ${selectedSession === s ? 'active' : ''}`}
-                                onClick={() => setSelectedSession(s)}
+                                onClick={() => handleSelectSession(s)}
                             >
                                 <span className="session-name">{s.childData?.name || 'Unknown'}</span>
-                                <span className="session-time">
-                                    {s.isLive ? '🔴 Live' : new Date(s.completedAt).toLocaleTimeString()}
+                                <span className="session-meta">
+                                    Age {s.childData?.age} | {new Date(s.completedAt).toLocaleTimeString()}
                                 </span>
                             </button>
                         ))}
                     </div>
                 )}
 
-                {/* Session Summary */}
                 {selectedSession ? (
                     <>
+                        {/* Session Overview */}
                         <div className="session-card">
-                            <h2>Session Analysis {selectedSession.isLive && '🔴 (In Progress)'}</h2>
+                            <h2>📊 Session Analysis</h2>
                             <div className="session-info">
                                 <div className="info-item">
                                     <span className="label">Student</span>
-                                    <span className="value">{selectedSession.childData?.name || 'Unknown'}</span>
+                                    <span className="value">{selectedSession.childData?.name}</span>
                                 </div>
                                 <div className="info-item">
                                     <span className="label">Age</span>
-                                    <span className="value">{selectedSession.childData?.age || '-'}</span>
+                                    <span className="value">{selectedSession.childData?.age}</span>
                                 </div>
                                 <div className="info-item">
                                     <span className="label">Duration</span>
-                                    <span className="value">
-                                        {Math.round((selectedSession.totalDurationMs || 0) / 1000)}s
-                                    </span>
+                                    <span className="value">{Math.round((selectedSession.totalDurationMs || 0) / 1000)}s</span>
                                 </div>
                                 <div className="info-item">
-                                    <span className="label">Friction Level</span>
-                                    <span className="value friction-badge" style={{ background: friction.color }}>
-                                        {friction.level}
-                                    </span>
+                                    <span className="label">Friction</span>
+                                    <span className="value friction-badge" style={{ background: friction.color }}>{friction.level}</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Tracking Metrics */}
+                        {/* Stress Alert */}
+                        {stress.level !== 'Normal Range' && (
+                            <div className="stress-alert" style={{ borderColor: stress.color }}>
+                                <span className="stress-icon">{stress.icon}</span>
+                                <div>
+                                    <strong>{stress.level}</strong>
+                                    <p>This session shows patterns that may warrant additional attention.</p>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Metrics Grid */}
                         <div className="metrics-card">
-                            <h3>📊 Tracked Signals</h3>
+                            <h3>📈 Tracked Signals</h3>
                             <div className="metrics-grid">
                                 <div className="metric">
-                                    <span className="metric-value">
-                                        {selectedSession.summary?.totalMouseMovements || selectedSession.mouseMovements || 0}
-                                    </span>
-                                    <span className="metric-label">Mouse Movements</span>
+                                    <span className="metric-value">{selectedSession.summary?.totalMouseMovements || selectedSession.mouseMovements || 0}</span>
+                                    <span className="metric-label">Mouse Moves</span>
                                 </div>
                                 <div className="metric">
-                                    <span className="metric-value">
-                                        {selectedSession.summary?.hesitationCount || selectedSession.hesitationEvents?.length || 0}
-                                    </span>
+                                    <span className="metric-value">{selectedSession.summary?.hesitationCount || selectedSession.hesitationEvents?.length || 0}</span>
                                     <span className="metric-label">Hesitations</span>
                                 </div>
                                 <div className="metric">
-                                    <span className="metric-value">
-                                        {selectedSession.summary?.totalCorrections || selectedSession.corrections || 0}
-                                    </span>
+                                    <span className="metric-value">{selectedSession.summary?.totalCorrections || selectedSession.corrections || 0}</span>
                                     <span className="metric-label">Corrections</span>
                                 </div>
                                 <div className="metric">
-                                    <span className="metric-value">
-                                        {selectedSession.summary?.avgResponseTime || 0}ms
-                                    </span>
-                                    <span className="metric-label">Avg Response</span>
+                                    <span className="metric-value">{selectedSession.summary?.stressIndicatorCount || selectedSession.stressIndicators?.length || 0}</span>
+                                    <span className="metric-label">Stress Signs</span>
+                                </div>
+                                <div className="metric">
+                                    <span className="metric-value">{selectedSession.summary?.faceDataPoints || selectedSession.faceData?.length || 0}</span>
+                                    <span className="metric-label">Face Samples</span>
+                                </div>
+                                <div className="metric">
+                                    <span className="metric-value">{selectedSession.summary?.voiceDataPoints || selectedSession.voiceData?.length || 0}</span>
+                                    <span className="metric-label">Voice Samples</span>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Activity Details */}
+                        {/* Activity Responses */}
                         <div className="activities-card">
-                            <h3>Activity Responses</h3>
+                            <h3>📝 Activity Responses</h3>
                             <div className="activity-list">
                                 {selectedSession.responses?.map((r, i) => (
-                                    <div key={i} className={`activity-item ${r.correct ? 'correct' : 'incorrect'}`}>
+                                    <div key={i} className={`activity-item ${r.correct === true ? 'correct' : r.correct === false ? 'incorrect' : 'verbal'}`}>
                                         <span className="activity-type">{r.type}</span>
                                         <span className="activity-result">
-                                            {r.correct ? '✓' : '✗'}
+                                            {r.correct === true ? '✓' : r.correct === false ? '✗' : '🎤'}
                                         </span>
-                                        <span className="activity-time">{r.responseTimeMs}ms</span>
+                                        <span className="activity-time">{r.responseTimeMs ? `${r.responseTimeMs}ms` : 'verbal'}</span>
                                     </div>
                                 ))}
-                                {(!selectedSession.responses || selectedSession.responses.length === 0) && (
-                                    <p className="no-data">No response data available</p>
-                                )}
                             </div>
                         </div>
 
                         {/* AI Analysis */}
                         <div className="ai-card">
                             <div className="ai-header">
-                                <h3>🤖 AI Analysis</h3>
-                                <button
-                                    onClick={analyzeWithAI}
-                                    disabled={isAnalyzing || !ollamaConnected}
-                                    className="analyze-button"
-                                >
-                                    {isAnalyzing ? 'Analyzing...' : 'Generate Analysis'}
+                                <h3>🤖 AI Early Detection Analysis</h3>
+                                <button onClick={analyzeWithAI} disabled={isAnalyzing || !ollamaConnected} className="analyze-button">
+                                    {isAnalyzing ? 'Analyzing...' : '🔄 Re-Analyze'}
                                 </button>
                             </div>
                             <div className="ai-content">
-                                {aiAnalysis ? (
+                                {isAnalyzing ? (
+                                    <div className="loading-analysis">
+                                        <span className="spinner">⏳</span> Analyzing patterns...
+                                    </div>
+                                ) : aiAnalysis ? (
                                     <pre className="ai-output">{aiAnalysis}</pre>
                                 ) : (
                                     <p className="ai-placeholder">
-                                        {ollamaConnected
-                                            ? 'Click "Generate Analysis" to get AI insights on this session.'
-                                            : 'Start Ollama with: OLLAMA_ORIGINS="*" ollama serve'}
+                                        {ollamaConnected ? 'Analysis will appear automatically...' : 'Start Ollama: OLLAMA_ORIGINS="*" ollama serve'}
                                     </p>
                                 )}
                             </div>
@@ -349,16 +349,8 @@ Remember: Use cautious language like "may indicate" or "appears to show". Always
                 ) : (
                     <div className="no-sessions">
                         <h3>📋 No Sessions Found</h3>
-                        <p>Sessions will appear here after students complete activities.</p>
-                        <ol className="instructions">
-                            <li>Go to <a href="/play" target="_blank">/play</a> in a new tab</li>
-                            <li>Enter a name, age, and gender</li>
-                            <li>Complete all 5 activities</li>
-                            <li>Click "Refresh" above to see the session</li>
-                        </ol>
-                        <button onClick={handleRefresh} className="big-refresh-button">
-                            🔄 Refresh Sessions
-                        </button>
+                        <p>Have students complete activities at <a href="/play">/play</a></p>
+                        <button onClick={loadSessions} className="big-refresh-button">🔄 Refresh</button>
                     </div>
                 )}
             </div>

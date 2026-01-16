@@ -104,6 +104,32 @@
     color: #333;
 }
 
+/* Stress Alert */
+.stress-alert {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    background: #fff3e0;
+    border-left: 4px solid #fb8c00;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.stress-icon {
+    font-size: 2rem;
+}
+
+.stress-alert strong {
+    color: #e65100;
+}
+
+.stress-alert p {
+    margin: 4px 0 0;
+    font-size: 0.9rem;
+    color: #666;
+}
+
 .friction-badge {
     color: white !important;
     padding: 4px 12px;
