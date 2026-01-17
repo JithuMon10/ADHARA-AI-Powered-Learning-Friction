@@ -1299,14 +1299,7 @@ function ChildActivity() {
                 </div>
             )}
 
-            {/* Enhanced tracking stats */}
-            <div className="tracking-indicator">
-                🔴 {signalsRef.current.mouseMovements} |
-                {faceModelsLoaded ? ` 😊 ${currentEmotion}` : ' 📹 ' + (cameraEnabled ? 'On' : 'Off')} |
-                👁️ {faceStats.blinks} |
-                🎤 {speechStats.words}w {speechStats.fillers}f |
-                {signalsRef.current.stressIndicators.length > 0 ? ' ⚠️' : ' ✅'}
-            </div>
+
 
             {/* Recording indicator (auto-started, no button needed) */}
             {isContinuousRecording && (
