@@ -358,164 +358,199 @@ Based on the patterns observed, this learner would benefit from:
         }
     }
 
-    // PDF Export Function
+    // PDF Export Function - Certified Beautiful & Clean
     const exportToPDF = () => {
         if (!selectedSession || !aiAnalysis) return
 
         const doc = new jsPDF()
         const pageWidth = doc.internal.pageSize.getWidth()
+        const pageHeight = doc.internal.pageSize.getHeight()
         const margin = 20
-        const lineHeight = 7
+        const contentWidth = pageWidth - (margin * 2)
         let y = 20
 
         const child = selectedSession.childData || {}
         const summary = selectedSession.summary || {}
 
-        // Helper functions
-        const addHeader = (text, size = 16) => {
-            doc.setFontSize(size)
-            doc.setFont('helvetica', 'bold')
-            doc.setTextColor(102, 126, 234) // Purple
-            doc.text(text, margin, y)
-            y += lineHeight + 4
+        // 1. Robust Text Sanitizer - Removes emojis, markdown symbols, and weird artifacts
+        const cleanText = (str) => {
+            if (!str) return ''
+            return str
+                .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '') // Remove Emojis
+                .replace(/[#*`_~]/g, '') // Remove Markdown characters
+                .replace(/\s+/g, ' ') // Collapse multiple spaces
+                .trim()
         }
 
-        const addSubheader = (text) => {
-            doc.setFontSize(12)
-            doc.setFont('helvetica', 'bold')
-            doc.setTextColor(60, 60, 60)
-            doc.text(text, margin, y)
-            y += lineHeight + 2
-        }
-
-        const addText = (text, indent = 0) => {
-            doc.setFontSize(10)
-            doc.setFont('helvetica', 'normal')
-            doc.setTextColor(50, 50, 50)
-            const lines = doc.splitTextToSize(text, pageWidth - margin * 2 - indent)
-            lines.forEach(line => {
-                if (y > 270) {
-                    doc.addPage()
-                    y = 20
-                }
-                doc.text(line, margin + indent, y)
-                y += lineHeight - 1
-            })
-        }
-
-        const addBullet = (text) => {
-            if (y > 270) {
+        // Layout Helpers
+        const checkPageBreak = (height = 10) => {
+            if (y + height > pageHeight - margin) {
                 doc.addPage()
                 y = 20
+                return true
             }
-            doc.setFontSize(10)
-            doc.setFont('helvetica', 'normal')
-            doc.setTextColor(50, 50, 50)
-            doc.text('•', margin + 5, y)
-            const lines = doc.splitTextToSize(text, pageWidth - margin * 2 - 15)
-            lines.forEach((line, i) => {
-                doc.text(line, margin + 12, y)
-                if (i < lines.length - 1) y += lineHeight - 1
-            })
-            y += lineHeight
+            return false
         }
 
-        const addLine = () => {
-            doc.setDrawColor(200, 200, 200)
-            doc.line(margin, y, pageWidth - margin, y)
-            y += 8
+        const drawSectionHeader = (title) => {
+            checkPageBreak(25)
+            y += 5
+            doc.setFillColor(240, 242, 245)
+            doc.rect(margin, y, contentWidth, 12, 'F')
+            doc.setFontSize(11)
+            doc.setFont('helvetica', 'bold')
+            doc.setTextColor(30, 58, 138) // Deep Blue
+            doc.text(title.toUpperCase(), margin + 5, y + 8)
+            y += 18
         }
 
-        // Header
-        doc.setFillColor(102, 126, 234)
-        doc.rect(0, 0, pageWidth, 35, 'F')
-        doc.setFontSize(22)
+        // --- BRAND HEADER ---
+        doc.setFillColor(30, 41, 59) // Slate 900
+        doc.rect(0, 0, pageWidth, 40, 'F')
+
+        doc.setFontSize(24)
         doc.setFont('helvetica', 'bold')
         doc.setTextColor(255, 255, 255)
-        doc.text('ADHARA Learning Friction Analysis', margin, 22)
+        doc.text('ADHARA', margin, 20)
+
         doc.setFontSize(10)
         doc.setFont('helvetica', 'normal')
-        doc.text('Early Detection Support System', margin, 30)
-        y = 50
+        doc.setTextColor(148, 163, 184) // Slate 400
+        doc.text('AI-Powered Learning Friction Analysis', margin, 28)
 
-        // Student Info Box
-        doc.setFillColor(248, 249, 250)
-        doc.roundedRect(margin, y - 5, pageWidth - margin * 2, 35, 3, 3, 'F')
+        doc.setFontSize(9)
+        doc.setTextColor(255, 255, 255)
+        doc.text('CONFIDENTIAL REPORT', pageWidth - margin - 35, 20)
 
-        doc.setFontSize(11)
+        y = 55
+
+        // --- STUDENT PROFILE CARD ---
+        doc.setDrawColor(226, 232, 240)
+        doc.setFillColor(255, 255, 255)
+        doc.roundedRect(margin, y, contentWidth, 35, 3, 3, 'S')
+
+        // Avatar circle placeholder
+        doc.setFillColor(239, 246, 255) // Blue 50
+        doc.circle(margin + 20, y + 17.5, 12, 'F')
+        doc.setFontSize(14)
+        doc.setTextColor(30, 58, 138)
         doc.setFont('helvetica', 'bold')
-        doc.setTextColor(40, 40, 40)
-        doc.text(`Student: ${child.name || 'Unknown'}`, margin + 10, y + 5)
-        doc.text(`Age: ${child.age || '-'} years`, margin + 10, y + 13)
+        doc.text((child.name || 'S').charAt(0).toUpperCase(), margin + 17, y + 22)
 
+        // Info
+        doc.setFontSize(16)
+        doc.text(cleanText(child.name || 'Unknown Student'), margin + 40, y + 12)
+
+        doc.setFontSize(10)
         doc.setFont('helvetica', 'normal')
-        doc.text(`Session Date: ${new Date(selectedSession.completedAt || Date.now()).toLocaleDateString()}`, pageWidth / 2, y + 5)
-        doc.text(`Duration: ${Math.round((selectedSession.totalDurationMs || 0) / 1000)} seconds`, pageWidth / 2, y + 13)
-        doc.text(`Activities Completed: ${selectedSession.responses?.length || 0}`, pageWidth / 2, y + 21)
+        doc.setTextColor(100, 116, 139) // Slate 500
+        doc.text(`Age: ${child.age || '-'} years  |  Session Date: ${new Date(selectedSession.completedAt || Date.now()).toLocaleDateString()}`, margin + 40, y + 20)
+
+        // Friction Badge
+        const frictionData = getFrictionLevel()
+        const badgeColor = frictionData.level === 'High' ? [239, 68, 68] : frictionData.level === 'Medium' ? [245, 158, 11] : [34, 197, 94]
+
+        doc.setFillColor(...badgeColor)
+        doc.roundedRect(pageWidth - margin - 40, y + 10, 30, 15, 2, 2, 'F')
+        doc.setTextColor(255, 255, 255)
+        doc.setFontSize(9)
+        doc.setFont('helvetica', 'bold')
+        doc.text(frictionData.level.toUpperCase(), pageWidth - margin - 36, y + 20)
+        doc.setFontSize(7)
+        doc.text('FRICTION', pageWidth - margin - 33, y + 14)
 
         y += 45
 
-        // Friction Level Badge
-        const frictionData = getFrictionLevel()
-        doc.setFillColor(
-            frictionData.level === 'High' ? 229 : frictionData.level === 'Medium' ? 251 : 67,
-            frictionData.level === 'High' ? 57 : frictionData.level === 'Medium' ? 140 : 160,
-            frictionData.level === 'High' ? 53 : frictionData.level === 'Medium' ? 0 : 71
-        )
-        doc.roundedRect(margin, y - 5, 80, 20, 3, 3, 'F')
-        doc.setFontSize(12)
-        doc.setFont('helvetica', 'bold')
-        doc.setTextColor(255, 255, 255)
-        doc.text(`Friction: ${frictionData.level}`, margin + 10, y + 7)
-        y += 30
+        // --- STATS ROW ---
+        const stats = [
+            { label: 'DURATION', value: `${Math.round((selectedSession.totalDurationMs || 0) / 1000)}s` },
+            { label: 'ACCURACY', value: `${selectedSession.summary?.clinicalContext?.overallAccuracy || 0}%` },
+            { label: 'ACTIVITIES', value: `${selectedSession.responses?.length || 0}` },
+            { label: 'HESITATIONS', value: `${selectedSession.summary?.hesitationCount || 0}` }
+        ]
 
-        addLine()
+        const statWidth = contentWidth / 4
+        stats.forEach((stat, i) => {
+            doc.setFontSize(8)
+            doc.setFont('helvetica', 'bold')
+            doc.setTextColor(148, 163, 184)
+            doc.text(stat.label, margin + (i * statWidth), y)
 
-        // AI Analysis Content (parse markdown)
-        addHeader('Analysis Report')
+            doc.setFontSize(14)
+            doc.setTextColor(30, 41, 59)
+            doc.text(stat.value, margin + (i * statWidth), y + 7)
+        })
 
-        // Parse the markdown content
+        y += 20
+        doc.setDrawColor(226, 232, 240)
+        doc.line(margin, y, pageWidth - margin, y)
+        y += 10
+
+        // --- ANALYSIS CONTENT ---
+
         const lines = aiAnalysis.split('\n')
+
         lines.forEach(line => {
-            const trimmed = line.trim()
-            if (!trimmed) {
-                y += 3
+            let text = cleanText(line)
+            if (!text) return
+
+            // Headers
+            if (line.trim().startsWith('# ')) {
+                // Skip main title as we have branding
                 return
             }
-
-            if (trimmed.startsWith('# ')) {
-                addHeader(trimmed.replace(/^#+ /, '').replace(/[🏥📋🧠🎯⚠️📊]/g, '').trim(), 14)
-            } else if (trimmed.startsWith('## ')) {
-                y += 3
-                addSubheader(trimmed.replace(/^#+ /, '').replace(/[🏥📋🧠🎯⚠️📊]/g, '').trim())
-            } else if (trimmed.startsWith('### ')) {
-                doc.setFontSize(11)
+            else if (line.trim().startsWith('## ')) {
+                drawSectionHeader(text)
+            }
+            else if (line.trim().startsWith('### ')) {
+                checkPageBreak(15)
+                y += 5
+                doc.setFontSize(12)
                 doc.setFont('helvetica', 'bold')
-                doc.setTextColor(80, 80, 80)
-                if (y > 270) { doc.addPage(); y = 20 }
-                doc.text(trimmed.replace(/^#+ /, '').replace(/[🏥📋🧠🎯⚠️📊]/g, '').trim(), margin + 5, y)
-                y += lineHeight + 2
-            } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
-                addBullet(trimmed.replace(/^[-*] /, '').replace(/\*\*/g, '').trim())
-            } else if (trimmed.match(/^\d+\./)) {
-                addBullet(trimmed.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim())
-            } else if (trimmed.startsWith('---')) {
-                addLine()
-            } else {
-                addText(trimmed.replace(/\*\*/g, ''))
+                doc.setTextColor(51, 65, 85) // Slate 700
+                doc.text(text, margin, y)
+                y += 7
+            }
+            // Bullet points
+            else if (line.trim().startsWith('- ') || line.trim().startsWith('* ') || line.trim().match(/^\d+\./)) {
+                checkPageBreak(8)
+                doc.setFontSize(10)
+                doc.setFont('helvetica', 'normal')
+                doc.setTextColor(71, 85, 105) // Slate 600
+
+                doc.setFillColor(71, 85, 105)
+                doc.circle(margin + 5, y - 1, 1, 'F')
+
+                const bulletText = text.replace(/^[-*] /, '').replace(/^\d+\.\s*/, '')
+                const splitText = doc.splitTextToSize(bulletText, contentWidth - 15)
+
+                doc.text(splitText, margin + 10, y)
+                y += (splitText.length * 6) + 2
+            }
+            // Regular text
+            else {
+                checkPageBreak(8)
+                doc.setFontSize(10)
+                doc.setFont('helvetica', 'normal')
+                doc.setTextColor(51, 65, 85)
+
+                const splitText = doc.splitTextToSize(text, contentWidth)
+                doc.text(splitText, margin, y)
+                y += (splitText.length * 6) + 3
             }
         })
 
         // Footer
-        doc.setFontSize(8)
-        doc.setFont('helvetica', 'italic')
-        doc.setTextColor(150, 150, 150)
-        const footerY = 285
-        doc.text('ADHARA - AI-Powered Learning Friction Detection | FOR EDUCATIONAL SUPPORT USE ONLY', margin, footerY)
-        doc.text(`Generated: ${new Date().toLocaleString()} | Human Review Required`, margin, footerY + 5)
+        const totalPages = doc.internal.getNumberOfPages()
+        for (let i = 1; i <= totalPages; i++) {
+            doc.setPage(i)
+            doc.setFontSize(8)
+            doc.setTextColor(148, 163, 184)
+            doc.text(`ADHARA Professional Screening • Page ${i} of ${totalPages}`, margin, pageHeight - 10)
+            doc.text(new Date().toLocaleString(), pageWidth - margin - 40, pageHeight - 10)
+        }
 
-        // Save
-        doc.save(`ADHARA_Report_${child.name || 'Student'}_${new Date().toISOString().split('T')[0]}.pdf`)
+        doc.save(`ADHARA_Report_${cleanText(child.name) || 'Student'}.pdf`)
     }
 
     const deviations = calculateDeviations()
