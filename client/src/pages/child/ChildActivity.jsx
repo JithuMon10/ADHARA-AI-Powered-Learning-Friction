@@ -1319,6 +1319,52 @@ function ChildActivity() {
                             </div>
                         )}
 
+                        {/* RHYMING / SOUND - Word recognition */}
+                        {(currentActivity.type === 'rhyming' || currentActivity.type === 'sound' || currentActivity.type === 'soundMatch') && (
+                            <>
+                                {currentActivity.targetWord && (
+                                    <div className="target-word-display">{currentActivity.targetWord}</div>
+                                )}
+                                <div className="options-grid">
+                                    {currentActivity.options.map((opt, i) => (
+                                        <button key={i} className="option-button word-option" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
+                        {/* MATH - Simple arithmetic */}
+                        {currentActivity.type === 'math' && (
+                            <div className="options-grid">
+                                {currentActivity.options.map((opt, i) => (
+                                    <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* QUANTITY - Compare groups */}
+                        {currentActivity.type === 'quantity' && (
+                            <div className="options-grid quantity-options">
+                                {currentActivity.options.map((opt, i) => (
+                                    <button key={i} className="option-button quantity-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* STROOP - Color word test */}
+                        {currentActivity.type === 'stroop' && (
+                            <>
+                                <div className="stroop-display" style={{ color: currentActivity.displayColor }}>
+                                    {currentActivity.word}
+                                </div>
+                                <div className="options-grid">
+                                    {currentActivity.options.map((opt, i) => (
+                                        <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
+                                    ))}
+                                </div>
+                            </>
+                        )}
+
                         {/* VERBAL */}
                         {currentActivity.type === 'verbal' && (
                             <div className="verbal-activity">
@@ -1391,14 +1437,14 @@ function ChildActivity() {
                         {currentActivity.type === 'matching' && (
                             <div className="matching-activity">
                                 <div className="shapes-row">
-                                    {currentActivity.shapes.map((shape, i) => (
+                                    {currentActivity.shapes?.map((shape, i) => (
                                         <span key={i} className="shape-item">{i + 1}. {shape}</span>
                                     ))}
                                 </div>
                                 <div className="options-grid">
                                     {currentActivity.options.map((opt, i) => (
                                         <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>
-                                            {currentActivity.optionLabels[i]}
+                                            {opt}
                                         </button>
                                     ))}
                                 </div>
