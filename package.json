@@ -18,6 +18,6 @@
     ],
     "license": "MIT",
     "dependencies": {
-        "face-api.js": "^0.20.1"
+        "face-api.js": "^0.20.0"
     }
 }

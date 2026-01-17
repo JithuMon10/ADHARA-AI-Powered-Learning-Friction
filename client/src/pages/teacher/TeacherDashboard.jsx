@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import jsPDF from 'jspdf'
 import './TeacherDashboard.css'
 
 /**
@@ -357,6 +358,166 @@ Based on the patterns observed, this learner would benefit from:
         }
     }
 
+    // PDF Export Function
+    const exportToPDF = () => {
+        if (!selectedSession || !aiAnalysis) return
+
+        const doc = new jsPDF()
+        const pageWidth = doc.internal.pageSize.getWidth()
+        const margin = 20
+        const lineHeight = 7
+        let y = 20
+
+        const child = selectedSession.childData || {}
+        const summary = selectedSession.summary || {}
+
+        // Helper functions
+        const addHeader = (text, size = 16) => {
+            doc.setFontSize(size)
+            doc.setFont('helvetica', 'bold')
+            doc.setTextColor(102, 126, 234) // Purple
+            doc.text(text, margin, y)
+            y += lineHeight + 4
+        }
+
+        const addSubheader = (text) => {
+            doc.setFontSize(12)
+            doc.setFont('helvetica', 'bold')
+            doc.setTextColor(60, 60, 60)
+            doc.text(text, margin, y)
+            y += lineHeight + 2
+        }
+
+        const addText = (text, indent = 0) => {
+            doc.setFontSize(10)
+            doc.setFont('helvetica', 'normal')
+            doc.setTextColor(50, 50, 50)
+            const lines = doc.splitTextToSize(text, pageWidth - margin * 2 - indent)
+            lines.forEach(line => {
+                if (y > 270) {
+                    doc.addPage()
+                    y = 20
+                }
+                doc.text(line, margin + indent, y)
+                y += lineHeight - 1
+            })
+        }
+
+        const addBullet = (text) => {
+            if (y > 270) {
+                doc.addPage()
+                y = 20
+            }
+            doc.setFontSize(10)
+            doc.setFont('helvetica', 'normal')
+            doc.setTextColor(50, 50, 50)
+            doc.text('•', margin + 5, y)
+            const lines = doc.splitTextToSize(text, pageWidth - margin * 2 - 15)
+            lines.forEach((line, i) => {
+                doc.text(line, margin + 12, y)
+                if (i < lines.length - 1) y += lineHeight - 1
+            })
+            y += lineHeight
+        }
+
+        const addLine = () => {
+            doc.setDrawColor(200, 200, 200)
+            doc.line(margin, y, pageWidth - margin, y)
+            y += 8
+        }
+
+        // Header
+        doc.setFillColor(102, 126, 234)
+        doc.rect(0, 0, pageWidth, 35, 'F')
+        doc.setFontSize(22)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text('ADHARA Learning Friction Analysis', margin, 22)
+        doc.setFontSize(10)
+        doc.setFont('helvetica', 'normal')
+        doc.text('Early Detection Support System', margin, 30)
+        y = 50
+
+        // Student Info Box
+        doc.setFillColor(248, 249, 250)
+        doc.roundedRect(margin, y - 5, pageWidth - margin * 2, 35, 3, 3, 'F')
+
+        doc.setFontSize(11)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(40, 40, 40)
+        doc.text(`Student: ${child.name || 'Unknown'}`, margin + 10, y + 5)
+        doc.text(`Age: ${child.age || '-'} years`, margin + 10, y + 13)
+
+        doc.setFont('helvetica', 'normal')
+        doc.text(`Session Date: ${new Date(selectedSession.completedAt || Date.now()).toLocaleDateString()}`, pageWidth / 2, y + 5)
+        doc.text(`Duration: ${Math.round((selectedSession.totalDurationMs || 0) / 1000)} seconds`, pageWidth / 2, y + 13)
+        doc.text(`Activities Completed: ${selectedSession.responses?.length || 0}`, pageWidth / 2, y + 21)
+
+        y += 45
+
+        // Friction Level Badge
+        const frictionData = getFrictionLevel()
+        doc.setFillColor(
+            frictionData.level === 'High' ? 229 : frictionData.level === 'Medium' ? 251 : 67,
+            frictionData.level === 'High' ? 57 : frictionData.level === 'Medium' ? 140 : 160,
+            frictionData.level === 'High' ? 53 : frictionData.level === 'Medium' ? 0 : 71
+        )
+        doc.roundedRect(margin, y - 5, 80, 20, 3, 3, 'F')
+        doc.setFontSize(12)
+        doc.setFont('helvetica', 'bold')
+        doc.setTextColor(255, 255, 255)
+        doc.text(`Friction: ${frictionData.level}`, margin + 10, y + 7)
+        y += 30
+
+        addLine()
+
+        // AI Analysis Content (parse markdown)
+        addHeader('Analysis Report')
+
+        // Parse the markdown content
+        const lines = aiAnalysis.split('\n')
+        lines.forEach(line => {
+            const trimmed = line.trim()
+            if (!trimmed) {
+                y += 3
+                return
+            }
+
+            if (trimmed.startsWith('# ')) {
+                addHeader(trimmed.replace(/^#+ /, '').replace(/[🏥📋🧠🎯⚠️📊]/g, '').trim(), 14)
+            } else if (trimmed.startsWith('## ')) {
+                y += 3
+                addSubheader(trimmed.replace(/^#+ /, '').replace(/[🏥📋🧠🎯⚠️📊]/g, '').trim())
+            } else if (trimmed.startsWith('### ')) {
+                doc.setFontSize(11)
+                doc.setFont('helvetica', 'bold')
+                doc.setTextColor(80, 80, 80)
+                if (y > 270) { doc.addPage(); y = 20 }
+                doc.text(trimmed.replace(/^#+ /, '').replace(/[🏥📋🧠🎯⚠️📊]/g, '').trim(), margin + 5, y)
+                y += lineHeight + 2
+            } else if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                addBullet(trimmed.replace(/^[-*] /, '').replace(/\*\*/g, '').trim())
+            } else if (trimmed.match(/^\d+\./)) {
+                addBullet(trimmed.replace(/^\d+\.\s*/, '').replace(/\*\*/g, '').trim())
+            } else if (trimmed.startsWith('---')) {
+                addLine()
+            } else {
+                addText(trimmed.replace(/\*\*/g, ''))
+            }
+        })
+
+        // Footer
+        doc.setFontSize(8)
+        doc.setFont('helvetica', 'italic')
+        doc.setTextColor(150, 150, 150)
+        const footerY = 285
+        doc.text('ADHARA - AI-Powered Learning Friction Detection | FOR EDUCATIONAL SUPPORT USE ONLY', margin, footerY)
+        doc.text(`Generated: ${new Date().toLocaleString()} | Human Review Required`, margin, footerY + 5)
+
+        // Save
+        doc.save(`ADHARA_Report_${child.name || 'Student'}_${new Date().toISOString().split('T')[0]}.pdf`)
+    }
+
     const deviations = calculateDeviations()
     const friction = getFrictionLevel()
     const { strengths, concerns } = analyzeStrengthsAndConcerns()
@@ -465,9 +626,14 @@ Based on the patterns observed, this learner would benefit from:
                             <div className="analysis-card">
                                 <div className="analysis-header">
                                     <h3>📋 Analysis Report</h3>
-                                    <button onClick={analyzeWithAI} disabled={isAnalyzing || !ollamaConnected} className="btn-analyze">
-                                        {isAnalyzing ? '⏳ Analyzing...' : '🔄 Regenerate'}
-                                    </button>
+                                    <div className="analysis-buttons">
+                                        <button onClick={analyzeWithAI} disabled={isAnalyzing || !ollamaConnected} className="btn-analyze">
+                                            {isAnalyzing ? '⏳ Analyzing...' : '🔄 Regenerate'}
+                                        </button>
+                                        <button onClick={exportToPDF} disabled={!aiAnalysis} className="btn-export">
+                                            📥 Export PDF
+                                        </button>
+                                    </div>
                                 </div>
                                 <div className="analysis-content">
                                     {isAnalyzing ? (

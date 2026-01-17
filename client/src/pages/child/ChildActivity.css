@@ -296,6 +296,12 @@
     color: #673AB7;
     margin-bottom: 16px;
     letter-spacing: 4px;
+    text-align: center;
+}
+
+.target-word {
+    text-align: center;
+    width: 100%;
 }
 
 .verbal-instruction {
