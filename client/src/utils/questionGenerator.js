@@ -70,11 +70,11 @@ export const QUESTION_POOLS = {
         clinicalName: 'Executive Function',
         icon: '🧠',
         baseline: [
-            { id: 'base_mem_3', type: 'workingMemory', difficulty: 1, question: "Remember this order: 3, 7, 2", sequence: [3, 7, 2], options: ['3, 7, 2', '7, 3, 2', '2, 7, 3', '3, 2, 7'], correct: '3, 7, 2' }
+            { id: 'base_mem_3', type: 'workingMemory', difficulty: 1, question: "Remember the numbers!", sequence: [3, 7, 2], options: ['3, 7, 2', '7, 3, 2', '2, 7, 3', '3, 2, 7'], correct: '3, 7, 2' }
         ],
         followUp: [
-            { id: 'fu_mem_4', type: 'workingMemory', difficulty: 1, question: "Remember this order: 5, 1, 9", sequence: [5, 1, 9], options: ['5, 1, 9', '1, 5, 9', '9, 1, 5', '5, 9, 1'], correct: '5, 1, 9' },
-            { id: 'fu_mem_5', type: 'workingMemory', difficulty: 2, question: "Remember: 4, 1, 8, 5", sequence: [4, 1, 8, 5], options: ['4, 1, 8, 5', '1, 4, 8, 5', '4, 8, 1, 5', '5, 8, 1, 4'], correct: '4, 1, 8, 5' },
+            { id: 'fu_mem_4', type: 'workingMemory', difficulty: 1, question: "Remember the numbers!", sequence: [5, 1, 9], options: ['5, 1, 9', '1, 5, 9', '9, 1, 5', '5, 9, 1'], correct: '5, 1, 9' },
+            { id: 'fu_mem_5', type: 'workingMemory', difficulty: 2, question: "Remember the numbers!", sequence: [4, 1, 8, 5], options: ['4, 1, 8, 5', '1, 4, 8, 5', '4, 8, 1, 5', '5, 8, 1, 4'], correct: '4, 1, 8, 5' },
             { id: 'fu_stroop_1', type: 'stroop', difficulty: 2, question: "What COLOR is this word? (not what it says!)", word: 'BLUE', displayColor: 'red', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 'Red' },
             { id: 'fu_stroop_2', type: 'stroop', difficulty: 2, question: "What COLOR is this word?", word: 'GREEN', displayColor: 'yellow', options: ['Blue', 'Red', 'Green', 'Yellow'], correct: 'Yellow' }
         ]

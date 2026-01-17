@@ -1342,7 +1342,10 @@ function ChildActivity() {
             <div className={`activity-content ${showFeedback || ''}`}>
                 {currentActivity && (
                     <>
-                        <h2 className="activity-question">{currentActivity.question}</h2>
+                        {/* Don't show question for workingMemory - component handles display */}
+                        {currentActivity.type !== 'workingMemory' && currentActivity.type !== 'workingMemoryBackward' && (
+                            <h2 className="activity-question">{currentActivity.question}</h2>
+                        )}
 
                         {/* COUNTING */}
                         {currentActivity.type === 'counting' && (

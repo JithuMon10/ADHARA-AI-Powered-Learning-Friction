@@ -782,7 +782,7 @@ Based on the patterns observed, this learner would benefit from:
                                         <h4>😊 Face/Emotion Analysis</h4>
                                         <div className="face-metrics">
                                             <div className="face-metric">
-                                                <span className="metric-value">{selectedSession.summary.faceAnalysis.dominantEmotion || 'unknown'}</span>
+                                                <span className="metric-value">{selectedSession.summary.faceAnalysis.dominantEmotion || 'Neutral'}</span>
                                                 <span className="metric-label">Dominant Emotion</span>
                                             </div>
                                             <div className="face-metric">
