@@ -1488,14 +1488,6 @@ function ChildActivity() {
                             </div>
                         )}
 
-                        {/* MATH */}
-                        {currentActivity.type === 'math' && (
-                            <div className="options-grid">
-                                {currentActivity.options.map((opt, i) => (
-                                    <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                ))}
-                            </div>
-                        )}
 
                         {/* MATCHING */}
                         {currentActivity.type === 'matching' && (

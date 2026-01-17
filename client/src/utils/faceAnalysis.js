@@ -327,7 +327,7 @@ export class FaceAnalysisSession {
 
         // Dominant emotion overall
         const dominantEmotion = Object.entries(emotionCounts)
-            .sort((a, b) => b[1] - a[1])[0]?.[0] || 'unknown'
+            .sort((a, b) => b[1] - a[1])[0]?.[0] || 'neutral'
 
         // Frustration/stress indicators
         const negativeEmotions = ['angry', 'sad', 'fearful', 'disgusted']
