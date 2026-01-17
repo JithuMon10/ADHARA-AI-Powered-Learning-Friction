@@ -304,6 +304,18 @@
     width: 100%;
 }
 
+.target-word-display {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #5e35b1;
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 16px 24px;
+    background: linear-gradient(135deg, #ede7f6 0%, #e8eaf6 100%);
+    border-radius: 16px;
+    letter-spacing: 2px;
+}
+
 .verbal-instruction {
     color: #666;
     margin-bottom: 24px;

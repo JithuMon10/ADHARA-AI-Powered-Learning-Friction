@@ -1471,57 +1471,6 @@ function ChildActivity() {
                             </div>
                         )}
 
-                        {/* RHYMING - same as pattern but with targetWord display */}
-                        {currentActivity.type === 'rhyming' && (
-                            <>
-                                <div className="word-display target-word">🎯 {currentActivity.targetWord}</div>
-                                <div className="options-grid">
-                                    {currentActivity.options.map((opt, i) => (
-                                        <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-
-                        {/* SOUND - beginning sounds */}
-                        {currentActivity.type === 'sound' && (
-                            <>
-                                <div className="word-display target-word">🎵 {currentActivity.targetWord}</div>
-                                <div className="options-grid">
-                                    {currentActivity.options.map((opt, i) => (
-                                        <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                    ))}
-                                </div>
-                            </>
-                        )}
-
-                        {/* SOUND MATCH - which word is different */}
-                        {currentActivity.type === 'soundMatch' && (
-                            <div className="options-grid">
-                                {currentActivity.options.map((opt, i) => (
-                                    <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* PHONEME DELETE */}
-                        {currentActivity.type === 'phonemeDelete' && (
-                            <div className="options-grid">
-                                {currentActivity.options.map((opt, i) => (
-                                    <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* QUANTITY - comparison */}
-                        {currentActivity.type === 'quantity' && (
-                            <div className="options-grid">
-                                {currentActivity.options.map((opt, i) => (
-                                    <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                ))}
-                            </div>
-                        )}
-
                         {/* NUMBER PATTERN */}
                         {currentActivity.type === 'numberPattern' && (
                             <div className="options-grid">
@@ -1529,21 +1478,6 @@ function ChildActivity() {
                                     <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
                                 ))}
                             </div>
-                        )}
-
-                        {/* STROOP - Color-word interference */}
-                        {currentActivity.type === 'stroop' && (
-                            <>
-                                <div className="stroop-word" style={{ color: currentActivity.displayColor }}>
-                                    {currentActivity.word}
-                                </div>
-                                <p className="stroop-instruction">What COLOR is the text? (not what it says)</p>
-                                <div className="options-grid">
-                                    {currentActivity.options.map((opt, i) => (
-                                        <button key={i} className="option-button" onClick={() => handleAnswer(opt)} disabled={showFeedback}>{opt}</button>
-                                    ))}
-                                </div>
-                            </>
                         )}
 
                         {/* WORKING MEMORY - Digit span */}
