@@ -1,7 +1,3 @@
-<div align="center">
-
-![ADHARA Header](adhara-header.png)
-
 # ADHARA
 **Precision AI for Learning Friction Detection**
 
