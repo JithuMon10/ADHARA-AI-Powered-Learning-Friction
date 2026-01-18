@@ -83,7 +83,7 @@ We recommend using **Qwen 2.5 7B** for the best balance of performance and reaso
 To run the 7B model locally, your system should meet these specs:
 - **RAM:** 8GB minimum (16GB recommended)
 - **CPU:** Modern Quad-core processor (Intel i5/Ryzen 5 or newer)
-- **GPU (Optional):** NVIDIA GPU with 6GB+ VRAM or Apple Silicon (M1/M2/M3) for faster generation
+- **GPU (No exceptions):** NVIDIA GPU with 6GB+ VRAM or Apple Silicon (M1/M2/M3) for faster generation
 - **Storage:** ~10GB free space
 
 ### Setup Steps
