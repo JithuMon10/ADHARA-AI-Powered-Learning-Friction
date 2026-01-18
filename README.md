@@ -44,30 +44,75 @@ ADHARA captures four distinct behavioral streams to create a comprehensive frict
 
 ---
 
-## 🚀 Quick Start
+## 🛠️ Installation & Setup Guide
 
+### Prerequisites
+Before you begin, ensure you have the following installed:
+1. **Node.js** (v18 or higher) - [Download Here](https://nodejs.org/)
+2. **Git** - [Download Here](https://git-scm.com/)
+
+### 1. Close the Repository
 ```bash
-# Clone the repository
 git clone https://github.com/JithuMon10/ADHARA-AI-Powered-Learning-Friction.git
 cd ADHARA-AI-Powered-Learning-Friction
+```
 
-# Install dependencies
+### 2. Install Frontend Dependencies
+**Important:** You must move into the `client` directory before installing dependencies.
+```bash
 cd client
 npm install
+```
 
-# Start the development server
+### 3. Start the Application
+```bash
 npm run dev
 ```
+The application will launch at `http://localhost:5173`.
 
-### AI Analysis (Optional)
-For AI-powered report generation, install and run Ollama:
-```bash
-# Install Ollama from https://ollama.ai
-ollama pull llama3.2
+---
 
-# Run with CORS enabled
-OLLAMA_ORIGINS="*" ollama serve
-```
+## 🤖 Setting Up AI Analysis (Ollama)
+
+For the detailed "Clinical Analysis Report" to work generates, you need **Ollama** running locally. The app works without it, but the "Analysis" tab will be disabled.
+
+1. **Download Ollama** from [ollama.ai](https://ollama.ai).
+2. **Install the Model**: Open your terminal/command prompt and run:
+   ```bash
+   ollama pull llama3.2
+   ```
+3. **Run Ollama Server**: You must allow generic origins for the browser to access it:
+   ```bash
+   # Linux/Mac
+   OLLAMA_ORIGINS="*" ollama serve
+
+   # Windows PowerShell
+   $env:OLLAMA_ORIGINS="*"; ollama serve
+   ```
+
+---
+
+## ❓ Troubleshooting
+
+**"Module not found" or "Vite not found"**
+> ❌ Error: `'vite' is not recognized` or `missing module face-api.js`
+>
+> ✅ **Fix:** You likely forgot to `cd client`. Run:
+> ```bash
+> cd client
+> npm install
+> npm run dev
+> ```
+
+**"AI Analysis is offline" / "Click to generate analysis" does nothing**
+> ❌ The button is disabled or says "AI Offline".
+>
+> ✅ **Fix:** Ensure Ollama is running with `OLLAMA_ORIGINS="*"`. The app needs this to bypass CORS restrictions locally.
+
+**Webcam not working**
+> ❌ Browser blocks camera access.
+>
+> ✅ **Fix:** Check permissions in your browser address bar. Ensure no other app (Zoom/Teams) is using the camera.
 
 ---
 
@@ -86,16 +131,6 @@ ADHARA/
 ├── data/                     # Baseline datasets
 └── docs/                     # Documentation
 ```
-
----
-
-## 📊 How It Works
-
-1. **Child Session** - Engaging, game-like activities designed to not feel like tests
-2. **Baseline Assessment** - 6-8 questions across cognitive domains (reading, math, attention)
-3. **AI Mid-Analysis** - Real-time pattern detection adjusts question flow dynamically
-4. **Follow-up Probing** - Targeted questions for areas showing friction
-5. **Report Generation** - Comprehensive clinical-grade analysis for educators
 
 ---
 
