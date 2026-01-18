@@ -76,10 +76,21 @@ The application will launch at `http://localhost:5173`.
 
 For the detailed "Clinical Analysis Report" to work generates, you need **Ollama** running locally. The app works without it, but the "Analysis" tab will be disabled.
 
+### Recommended Model: Qwen 2.5 7B
+We recommend using **Qwen 2.5 7B** for the best balance of performance and reasoning quality for behavior analysis.
+
+### Minimum System Requirements
+To run the 7B model locally, your system should meet these specs:
+- **RAM:** 8GB minimum (16GB recommended)
+- **CPU:** Modern Quad-core processor (Intel i5/Ryzen 5 or newer)
+- **GPU (Optional):** NVIDIA GPU with 6GB+ VRAM or Apple Silicon (M1/M2/M3) for faster generation
+- **Storage:** ~10GB free space
+
+### Setup Steps
 1. **Download Ollama** from [ollama.ai](https://ollama.ai).
 2. **Install the Model**: Open your terminal/command prompt and run:
    ```bash
-   ollama pull llama3.2
+   ollama pull qwen2.5:7b
    ```
 3. **Run Ollama Server**: You must allow generic origins for the browser to access it:
    ```bash
