@@ -1,64 +1,132 @@
 # ADHARA
-**Precision AI for Learning Friction Detection**
-
-![React](https://img.shields.io/badge/REACT-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Vite](https://img.shields.io/badge/VITE-646CFF?style=for-the-badge&logo=vite&logoColor=white)
-![TensorFlow](https://img.shields.io/badge/TENSORFLOW-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)
-![Ollama](https://img.shields.io/badge/OLLAMA-000000?style=for-the-badge&logo=ollama&logoColor=white)
-
----
-
-### The Vision
-ADHARA identifies cognitive barriers—Dyslexia, Dyscalculia, or ADHD—through a weightless, stress-free interaction layer. We focus on the *process* of learning, not just the results.
-
-</div>
-
-## Multimodal Analysis
-We utilize four distinct data streams to create a comprehensive friction profile.
-
-| Stream | Metric | Technology |
-| :--- | :--- | :--- |
-| **Gaze** | Attention Drift & Focal Points | Computer Vision |
-| **Emotion** | Micro-expression Sentiment | face-api.js |
-| **Velocity** | Interaction Speed & Jitter | Mouse Dynamics |
-| **Acoustics** | Fluency & Stammer Detection | Web Speech API |
-
----
-
-## Technical Innovation
-
-### Dynamic Session Leveling
-The environment adapts in real-time. By analyzing friction telemetry, ADHARA adjusts challenge complexity to stay within the "Flow State," preventing student burnout and anxiety.
-
-### Local Intelligence
-* **Edge Processing:** All facial analysis happens in the client browser.
-* **Private LLM:** Detailed report synthesis is powered by **Ollama**, ensuring student data never leaves the local machine.
-
----
-
-## Development Team
+### AI-Powered Learning Friction Detection System
 
 <div align="center">
 
-| Jithendra V Anand | Bhavith Madhav | Aravind Lal | Giridhar B Kumar |
-| :---: | :---: | :---: | :---: |
-| <img src="https://github.com/JithuMon10.png" width="80" style="border-radius:50%"> | <img src="https://github.com/Bhavith-fs.png" width="80" style="border-radius:50%"> | <img src="https://github.com/mfscpayload-690.png" width="80" style="border-radius:50%"> | <img src="https://github.com/Giri-dhar06.png" width="80" style="border-radius:50%"> |
+![Demo](demo.webp)
+
+*Real-time cognitive friction detection through multimodal AI analysis*
+
+[![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
+[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![TensorFlow](https://img.shields.io/badge/TensorFlow.js-FF6F00?style=for-the-badge&logo=tensorflow&logoColor=white)](https://www.tensorflow.org/js)
+[![Ollama](https://img.shields.io/badge/Ollama-000000?style=for-the-badge&logo=ollama&logoColor=white)](https://ollama.ai/)
 
 </div>
 
 ---
 
-## Implementation
+## 🎯 Overview
 
-1. **Environment Setup**
-   ```bash
-   git clone https://github.com/JithuMon10/ADHARA-AI-Powered-Learning-Friction.git
-   npm install
-   ```
+**ADHARA** (AI-Driven Holistic Assessment for Developmental Recognition and Assistance) is an intelligent early warning system that detects learning friction patterns in children. By analyzing behavioral signals across multiple modalities, ADHARA helps educators identify potential learning difficulties like Dyslexia, Dyscalculia, and ADHD before they become persistent challenges.
 
-2. **Execution**
-   ```bash
-   npm run dev
-   ```
+### Key Features
 
-<div align="center"> <sub>ADHARA © 2026 | Pioneering Early Intervention</sub> </div>
+- 🧠 **Adaptive Learning Sessions** - Questions adjust in real-time based on performance
+- 👁️ **Face & Emotion Analysis** - Detects stress, confusion, and engagement via webcam
+- 🖱️ **Mouse Dynamics Tracking** - Analyzes hesitation, jitter, and interaction patterns
+- 🎤 **Speech Analysis** - Monitors fluency, stammering, and verbal hesitation
+- 📊 **AI-Powered Reports** - Generates clinical-grade analysis using local LLM (Ollama)
+- 🔒 **Privacy-First** - All processing happens locally, no data leaves the machine
+
+---
+
+## 📈 Multimodal Analysis
+
+| Data Stream | What We Measure | Technology |
+|:------------|:----------------|:-----------|
+| **Vision** | Gaze tracking, blink rate, attention drift | face-api.js |
+| **Emotion** | Micro-expressions, stress detection, engagement | TensorFlow.js |
+| **Motor** | Mouse velocity, hesitation patterns, jitter | Custom tracking |
+| **Voice** | Fluency, filler words, stammering, pauses | Web Speech API |
+
+---
+
+## 🚀 Quick Start
+
+```bash
+# Clone the repository
+git clone https://github.com/JithuMon10/ADHARA-AI-Powered-Learning-Friction.git
+cd ADHARA-AI-Powered-Learning-Friction
+
+# Install dependencies
+cd client
+npm install
+
+# Start the development server
+npm run dev
+```
+
+### AI Analysis (Optional)
+For AI-powered report generation, install and run Ollama:
+```bash
+# Install Ollama from https://ollama.ai
+ollama pull llama3.2
+
+# Run with CORS enabled
+OLLAMA_ORIGINS="*" ollama serve
+```
+
+---
+
+## 🏗️ Architecture
+
+```
+ADHARA/
+├── client/                    # React + Vite frontend
+│   ├── src/
+│   │   ├── pages/            # Child activity & Teacher dashboard
+│   │   └── utils/            # Analysis modules
+│   │       ├── faceAnalysis.js      # Emotion & gaze detection
+│   │       ├── speechAnalysis.js    # Voice pattern analysis
+│   │       └── disorderDetection.js # Clinical pattern matching
+│   └── public/models/        # TensorFlow face detection models
+├── data/                     # Baseline datasets
+└── docs/                     # Documentation
+```
+
+---
+
+## 📊 How It Works
+
+1. **Child Session** - Engaging, game-like activities designed to not feel like tests
+2. **Baseline Assessment** - 6-8 questions across cognitive domains
+3. **AI Mid-Analysis** - Real-time pattern detection adjusts question flow
+4. **Follow-up Probing** - Targeted questions for areas showing friction
+5. **Report Generation** - Comprehensive analysis for educators
+
+---
+
+## 🎓 Use Cases
+
+- **Schools** - Early screening for learning difficulties
+- **Special Education** - Progress monitoring and intervention planning  
+- **Research** - Behavioral data collection for cognitive studies
+- **Parents** - At-home learning pattern awareness
+
+---
+
+## 👨‍💻 Developer
+
+<div align="center">
+
+| Jithendra V Anand |
+|:---:|
+| <img src="https://github.com/JithuMon10.png" width="100" style="border-radius:50%"> |
+| [![GitHub](https://img.shields.io/badge/GitHub-JithuMon10-181717?style=flat&logo=github)](https://github.com/JithuMon10) |
+
+</div>
+
+---
+
+## 📄 License
+
+This project is open-source and available under the MIT License.
+
+---
+
+<div align="center">
+<sub>Built with ❤️ for early intervention in education</sub>
+
+**⭐ Star this repo if you find it useful!**
+</div>
